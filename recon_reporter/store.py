@@ -14,7 +14,12 @@ def _slug(target: str) -> str:
 
 def make_run_dir(target: str, root: str | Path = "runs") -> Path:
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-    d = Path(root) / f"{_slug(target)}-{ts}"
+    base = f"{_slug(target)}-{ts}"
+    d = Path(root) / base
+    n = 1
+    while d.exists():  # avoid clobbering a run created in the same second
+        d = Path(root) / f"{base}-{n}"
+        n += 1
     (d / "raw").mkdir(parents=True, exist_ok=True)
     return d
 
@@ -25,6 +30,22 @@ def save_raw(run_dir: Path, tool: str, raw: str) -> None:
 
 def save_findings(run_dir: Path, scan: ScanRun) -> None:
     (run_dir / "findings.json").write_text(scan.model_dump_json(indent=2), encoding="utf-8")
+
+
+def iter_run_dirs(root: str | Path = "runs") -> list[Path]:
+    """All run directories under `root` that contain a findings.json, oldest first by name."""
+    rp = Path(root)
+    if not rp.exists():
+        return []
+    dirs = [d for d in rp.iterdir() if d.is_dir() and (d / "findings.json").exists()]
+    return sorted(dirs, key=lambda d: d.name)
+
+
+def latest_findings(target: str, root: str | Path = "runs") -> Path | None:
+    """Most recent findings.json for `target`, or None if there's no prior run."""
+    slug = _slug(target)
+    cands = [d for d in iter_run_dirs(root) if d.name.startswith(slug + "-")]
+    return (cands[-1] / "findings.json") if cands else None
 
 
 def save_report(run_dir: Path, markdown: str) -> Path:

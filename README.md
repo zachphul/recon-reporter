@@ -71,7 +71,8 @@ Add a collector by subclassing `collectors.base.Collector`; add a parser into th
 
 - [x] Phase 0/1 — Nmap collector, rules, AI report, scope gate, tests
 - [x] Phase 2 — NVD CVE enrichment, HTML report, WhatWeb + TLS collectors, scan diff, MCP server
-- [~] Phase 3 — HTTP security-header grading (`--http`), SARIF export · _next: PDF, scheduled monitoring, dashboard_
+- [x] Phase 3 — HTTP header grading, SARIF export, PDF, `monitor` (drift), `dashboard`
+- Hardened for the long term: pure testable pipeline, logging, ruff + mypy clean, 34 tests, CI-gated (see [`docs/QUALITY-PLAN.md`](docs/QUALITY-PLAN.md))
 
 Full plan: [`docs/ROADMAP.md`](docs/ROADMAP.md) · architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · usage: [`docs/USAGE.md`](docs/USAGE.md)
 

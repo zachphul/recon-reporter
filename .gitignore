@@ -1,5 +1,6 @@
 # Runs / output (may contain scan data)
 runs/
+samples/_runs/
 *.xml
 !tests/fixtures/*.xml
 

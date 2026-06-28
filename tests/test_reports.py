@@ -29,3 +29,11 @@ def test_empty_scan_sarif_has_no_results():
     assert doc["version"] == "2.1.0"
     assert doc["runs"][0]["results"] == []
     assert doc["runs"][0]["tool"]["driver"]["rules"] == []
+
+
+def test_pdf_degrades_gracefully(tmp_path):
+    from recon_reporter.report import pdf
+    out = tmp_path / "x.pdf"
+    ok = pdf.to_pdf("<html><body>ok</body></html>", out)
+    # weasyprint may or may not be present; either way no crash, and result is consistent.
+    assert ok is (out.exists())

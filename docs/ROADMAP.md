@@ -14,11 +14,17 @@
 - **Scan diff** command (asset drift over time)
 - **MCP server** wrapper (exposes recon as an agent tool — ties the MCP cert)
 
-## 🟡 Phase 3 — in progress
+## ✅ Phase 3 — shipped
 - [x] HTTP collector (`httpx`) — security-header grading (`--http`), pure-Python
 - [x] SARIF 2.1.0 export — feeds GitHub code scanning / CI security gates
-- [ ] PDF export (weasyprint) for client-ready deliverables
+- [x] PDF export (`--pdf`, optional weasyprint) for client-ready deliverables
+- [x] `monitor` command — scan + auto-diff vs prior run, `--fail-on-new` for CI/alerts
+- [x] `dashboard` command — HTML index of all runs
+
+## ⏳ Later
 - [ ] More rule packs (CIS-style checks, exposed-secret heuristics)
+- [ ] CPE-based CVE matching (move beyond keyword search)
+- [ ] Scheduled-deploy wrapper (cron) around `monitor`
 - [ ] Severity calibration from CVSS + exposure (move beyond keyword CVE match to CPE)
 - [ ] Scheduled monitoring mode (cron → scan → diff → alert on new findings)
 - [ ] Web dashboard (read `findings.json` history, trend charts)

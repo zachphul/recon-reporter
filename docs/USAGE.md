@@ -40,9 +40,13 @@ recon-reporter scan <target> [options]
 | `--profile` | `default` (top 1000, -sV -sC) · `quick` (-F) · `full` (-p-) |
 | `--cve` | Enrich services with NVD CVE matches (network; cached) |
 | `--web` | Also run WhatWeb + sslscan |
+| `--http` | Grade HTTP security headers (pure Python) |
+| `--insecure` | Skip TLS verification for `--http` (reach bad-cert hosts) |
+| `--pdf` | Also write a PDF (needs weasyprint; else prints a how-to) |
 | `--no-ai` | Rule-based report only (no LLM) |
 | `--offline PATH` | Use an existing nmap XML instead of scanning |
 | `--no-scope-check` | Skip the scope gate — **only valid with `--offline`** |
+| `--verbose` / `-v` | Verbose logging |
 | `--out PATH` | Output root (default `runs/`) |
 
 Examples:
@@ -68,6 +72,25 @@ recon-reporter diff <old findings.json> <new findings.json> [--out diff.md]
 
 Reports newly open / closed ports, changed services, and new rule flags between two runs —
 asset drift monitoring.
+
+### `monitor`
+
+```bash
+recon-reporter monitor <target> --scope scope.yml --authorized [--fail-on-new]
+```
+
+Scans the target and automatically diffs it against its **most recent prior run** (writes
+`diff.md` into the new run dir). First run for a target just establishes a baseline.
+`--fail-on-new` exits 1 when new findings appear — wire it into cron/CI to get alerted on drift.
+
+### `dashboard`
+
+```bash
+recon-reporter dashboard --runs runs --out runs/dashboard.html
+```
+
+Builds a single dark HTML index of every run under `runs/` — target, date, severity counts,
+and a link to each report. Open it in a browser to see your whole assessment history.
 
 ## AI provider
 

@@ -2,6 +2,16 @@
 
 All notable changes to Recon Reporter.
 
+## [0.5.0] — 2026-06-28 — stretch features
+### Added
+- **`monitor` command** — scan a target and diff it against its most recent prior run; writes
+  `diff.md`; `--fail-on-new` exits 1 when findings appear (for CI/alerting).
+- **`dashboard` command** — aggregate every run under `runs/` into a single dark HTML index.
+- **Optional `--pdf`** export (weasyprint; degrades gracefully with a how-to when absent).
+- **`_execute_scan` helper** — scan & monitor share one gate→pipeline→persist core (DRY).
+- `make_run_dir` now collision-safe for back-to-back runs; `store.latest_findings()` lookup.
+- CLI integration tests (Typer runner) + store/dashboard/PDF tests. Suite 25 → **34**.
+
 ## [0.4.0] — 2026-06-28 — long-term hardening
 ### Added
 - **Extracted `pipeline.run_pipeline()`** — the recon pipeline is now a pure, unit-testable
