@@ -71,7 +71,7 @@ Add a collector by subclassing `collectors.base.Collector`; add a parser into th
 
 - [x] Phase 0/1 — Nmap collector, rules, AI report, scope gate, tests
 - [x] Phase 2 — NVD CVE enrichment, HTML report, WhatWeb + TLS collectors, scan diff, MCP server
-- [ ] Phase 3 — PDF export, HTTP/security-header collector, scheduled monitoring, web dashboard
+- [~] Phase 3 — HTTP security-header grading (`--http`), SARIF export · _next: PDF, scheduled monitoring, dashboard_
 
 Full plan: [`docs/ROADMAP.md`](docs/ROADMAP.md) · architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · usage: [`docs/USAGE.md`](docs/USAGE.md)
 

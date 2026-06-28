@@ -29,6 +29,7 @@ from .auth.scope import AuthorizationError, Scope
 from .collectors.nmap import NmapCollector
 from .collectors import tls as tlsmod
 from .collectors import whatweb as whatwebmod
+from .collectors.http_headers import HttpHeaderCollector
 from .config import settings
 from .enrich import rules
 from .enrich.cve import CveLookup
@@ -36,6 +37,7 @@ from .model import ScanRun
 from .parsers.nmap_xml import parse_nmap_xml
 from .report import html as htmlrep
 from .report import markdown as md
+from .report import sarif as sarifrep
 
 app = typer.Typer(add_completion=False, help="AI-assisted reconnaissance reporting.")
 console = Console()
@@ -52,6 +54,7 @@ def scan(
     no_ai: bool = typer.Option(False, "--no-ai", help="Skip the LLM analysis (rule findings only)."),
     cve: bool = typer.Option(False, "--cve", help="Enrich services with NVD CVE matches (needs network)."),
     web: bool = typer.Option(False, "--web", help="Also run whatweb + sslscan (web/TLS recon)."),
+    http: bool = typer.Option(False, "--http", help="Grade HTTP security headers (pure Python; needs network)."),
     out: Path = typer.Option("runs", help="Output root directory."),
 ):
     """Run recon against TARGET and write a security report."""
@@ -112,6 +115,13 @@ def scan(
             else:
                 console.print(f"[dim]{label} not installed — skipping[/dim]")
 
+    # 3b2) HTTP security-header grading (pure Python; produces flags directly)
+    header_flags = []
+    if http and not offline:
+        console.print("[cyan]Grading HTTP security headers…[/cyan]")
+        header_flags = HttpHeaderCollector().collect(run.hosts)
+        console.print(f"  {len(header_flags)} header finding(s).")
+
     # 3c) CVE enrichment
     if cve:
         console.print("[cyan]Querying NVD for CVEs…[/cyan] (rate-limited; cached)")
@@ -119,7 +129,7 @@ def scan(
         console.print(f"Attached [bold]{added}[/bold] CVE reference(s).")
 
     # 4) Deterministic rule enrichment (after all collectors have contributed)
-    run.flags = rules.evaluate(run.hosts)
+    run.flags = rules.evaluate(run.hosts) + header_flags
     console.print(f"Parsed [bold]{len(run.hosts)}[/bold] host(s), "
                   f"[bold]{n_services}[/bold] open service(s), "
                   f"[bold]{len(run.flags)}[/bold] rule flag(s).")
@@ -143,9 +153,11 @@ def scan(
     store.save_findings(run_dir, run)
     report_path = store.save_report(run_dir, md.render(run, analysis))
     html_path = store.save_html(run_dir, htmlrep.render(run, analysis))
+    sarif_path = store.save_sarif(run_dir, sarifrep.dumps(run, analysis))
 
     console.print(f"\n[green]Report written:[/green] {report_path}")
     console.print(f"[green]HTML report:[/green]    {html_path}")
+    console.print(f"[green]SARIF:[/green]          {sarif_path}")
     console.print(f"[dim]  Raw + findings.json in {run_dir}[/dim]")
 
 

@@ -37,3 +37,9 @@ def save_html(run_dir: Path, html: str) -> Path:
     p = run_dir / "report.html"
     p.write_text(html, encoding="utf-8")
     return p
+
+
+def save_sarif(run_dir: Path, sarif: str) -> Path:
+    p = run_dir / "report.sarif.json"
+    p.write_text(sarif, encoding="utf-8")
+    return p

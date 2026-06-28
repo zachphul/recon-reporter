@@ -2,6 +2,14 @@
 
 All notable changes to Recon Reporter.
 
+## [0.3.0] — 2026-06-28
+### Added
+- **HTTP security-header collector** (`collectors/http_headers.py`) — pure-Python (httpx),
+  grades HSTS/CSP/X-Frame-Options/etc. and flags Server-header disclosure. Runs anywhere. `--http`.
+- **SARIF 2.1.0 export** (`report/sarif.py`) — every run now also writes `report.sarif.json`
+  for GitHub code-scanning / CI security gates.
+- Phase 3 tests (header grading + SARIF) — 11 tests total.
+
 ## [0.2.0] — 2026-06-28
 ### Added
 - **NVD CVE enrichment** (`enrich/cve.py`) with on-disk caching and graceful offline degradation — `--cve`.
