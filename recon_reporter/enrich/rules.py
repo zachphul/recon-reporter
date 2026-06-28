@@ -10,9 +10,50 @@ SENSITIVE_EXPOSED = {3389: "RDP", 445: "SMB", 5432: "PostgreSQL", 3306: "MySQL",
                      27017: "MongoDB", 6379: "Redis", 9200: "Elasticsearch"}
 WEAK_TLS_MARKERS = ("SSLv3", "TLSv1.0", "TLSv1.1", "SSLv2")
 
+# product (substring, case-insensitive) -> a recent-ish baseline version tuple.
+# Anything below is flagged as POTENTIALLY outdated (verify against the vendor advisory).
+OUTDATED_BASELINE = {
+    "openssh": (9, 0),
+    "apache httpd": (2, 4, 60),
+    "nginx": (1, 24),
+    "vsftpd": (3, 0),
+    "proftpd": (1, 3, 8),
+    "exim": (4, 96),
+    "mysql": (8, 0),
+}
+
 
 def _flag(host: str, sev: Severity, title: str, detail: str, port: int | None = None) -> RuleFlag:
     return RuleFlag(title=title, severity=sev, detail=detail, host=host, port=port)
+
+
+def _ver_tuple(s: str) -> tuple[int, ...]:
+    """Extract a leading numeric version like '6.6.1p1' -> (6, 6, 1)."""
+    import re
+
+    m = re.match(r"(\d+(?:\.\d+)*)", (s or "").strip())
+    if not m:
+        return ()
+    return tuple(int(x) for x in m.group(1).split("."))
+
+
+def _outdated_flag(host: str, s) -> RuleFlag | None:
+    if not (s.product and s.version):
+        return None
+    name = s.product.lower()
+    baseline = next((v for k, v in OUTDATED_BASELINE.items() if k in name), None)
+    if not baseline:
+        return None
+    ver = _ver_tuple(s.version)
+    if not ver:
+        return None
+    n = min(len(ver), len(baseline))
+    if ver[:n] < baseline[:n]:
+        want = ".".join(str(x) for x in baseline)
+        return _flag(host, Severity.MEDIUM, f"Potentially outdated {s.product} {s.version}",
+                     f"Detected {s.product} {s.version}; a recent baseline is ~{want}. "
+                     f"Verify against vendor advisories for known CVEs.", s.port)
+    return None
 
 
 def evaluate(hosts: list[Host]) -> list[RuleFlag]:
@@ -48,4 +89,8 @@ def _evaluate_service(host: str, s: Service) -> list[RuleFlag]:
     if s.product and s.version:
         out.append(_flag(host, Severity.INFO, f"Version disclosed: {s.label}",
                          "Exact product/version is visible; useful for CVE matching.", p))
+
+    outdated = _outdated_flag(host, s)
+    if outdated:
+        out.append(outdated)
     return out

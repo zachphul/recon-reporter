@@ -6,7 +6,7 @@
       "tool": {
         "driver": {
           "name": "Recon Reporter",
-          "version": "0.3.0",
+          "version": "0.3.1",
           "informationUri": "https://github.com/zachphul/recon-reporter",
           "rules": [
             {
@@ -17,6 +17,16 @@
               },
               "defaultConfiguration": {
                 "level": "note"
+              }
+            },
+            {
+              "id": "potentially-outdated-openssh-6-6-1p1-ubuntu-2ubuntu2-13",
+              "name": "Potentially outdated OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13",
+              "shortDescription": {
+                "text": "Potentially outdated OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
               }
             },
             {
@@ -47,6 +57,16 @@
               },
               "defaultConfiguration": {
                 "level": "note"
+              }
+            },
+            {
+              "id": "potentially-outdated-apache-httpd-2-4-7",
+              "name": "Potentially outdated Apache httpd 2.4.7",
+              "shortDescription": {
+                "text": "Potentially outdated Apache httpd 2.4.7"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
               }
             },
             {
@@ -81,6 +101,25 @@
           },
           "properties": {
             "severity": "info"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "45.33.32.156:22"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "potentially-outdated-openssh-6-6-1p1-ubuntu-2ubuntu2-13",
+          "level": "warning",
+          "message": {
+            "text": "Detected OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13; a recent baseline is ~9.0. Verify against vendor advisories for known CVEs."
+          },
+          "properties": {
+            "severity": "medium"
           },
           "locations": [
             {
@@ -150,6 +189,25 @@
           ]
         },
         {
+          "ruleId": "potentially-outdated-apache-httpd-2-4-7",
+          "level": "warning",
+          "message": {
+            "text": "Detected Apache httpd 2.4.7; a recent baseline is ~2.4.60. Verify against vendor advisories for known CVEs."
+          },
+          "properties": {
+            "severity": "medium"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "45.33.32.156:80"
+                }
+              }
+            }
+          ]
+        },
+        {
           "ruleId": "weak-deprecated-tls",
           "level": "warning",
           "message": {
@@ -176,6 +234,25 @@
           },
           "properties": {
             "severity": "info"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "45.33.32.156:443"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "potentially-outdated-apache-httpd-2-4-7",
+          "level": "warning",
+          "message": {
+            "text": "Detected Apache httpd 2.4.7; a recent baseline is ~2.4.60. Verify against vendor advisories for known CVEs."
+          },
+          "properties": {
+            "severity": "medium"
           },
           "locations": [
             {

@@ -2,6 +2,13 @@
 
 All notable changes to Recon Reporter.
 
+## [0.3.1] — 2026-06-28
+### Added
+- **Outdated-software detection** in the rule engine — version-compares disclosed products
+  (OpenSSH, Apache, nginx, vsftpd, …) against a recent baseline and flags potentially old builds.
+- Docs: `SECURITY.md`, `docs/THREAT-MODEL.md`, `docs/EXAMPLES.md`; GitHub Actions CI workflow.
+- 13 tests total.
+
 ## [0.3.0] — 2026-06-28
 ### Added
 - **HTTP security-header collector** (`collectors/http_headers.py`) — pure-Python (httpx),
