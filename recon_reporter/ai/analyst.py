@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from ..config import Settings, settings as default_settings
+from ..config import Settings
+from ..config import settings as default_settings
 from ..model import ScanRun
 from .base import Analysis
 

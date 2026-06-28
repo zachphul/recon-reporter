@@ -8,7 +8,7 @@ import re
 import httpx
 
 from ..model import ScanRun
-from .base import Analysis, SYSTEM_PROMPT, build_prompt, ground
+from .base import SYSTEM_PROMPT, Analysis, build_prompt, ground
 
 
 def _extract_json(text: str) -> str:

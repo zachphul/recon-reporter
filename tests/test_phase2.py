@@ -2,11 +2,11 @@
 from datetime import datetime
 from pathlib import Path
 
-from recon_reporter.parsers.nmap_xml import parse_nmap_xml
-from recon_reporter.model import ScanRun, Host, Service
-from recon_reporter.report import html as htmlrep
 from recon_reporter import diff as diffmod
-from recon_reporter.collectors import whatweb, tls
+from recon_reporter.collectors import tls, whatweb
+from recon_reporter.model import Host, ScanRun, Service
+from recon_reporter.parsers.nmap_xml import parse_nmap_xml
+from recon_reporter.report import html as htmlrep
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_nmap.xml"
 

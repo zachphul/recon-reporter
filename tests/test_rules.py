@@ -20,7 +20,6 @@ def test_outdated_software_flagged():
     hosts = parse_nmap_xml(FIXTURE.read_text(encoding="utf-8"))
     flags = rules.evaluate(hosts)
     outdated = [f for f in flags if "outdated" in f.title.lower()]
-    titles = " ".join(f.title for f in outdated)
     # OpenSSH 6.6.1 (< 9.0) and Apache httpd 2.4.7 (< 2.4.60) should both flag
     assert any("OpenSSH" in t for t in [f.title for f in outdated])
     assert any("Apache" in t for t in [f.title for f in outdated])

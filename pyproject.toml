@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.10"]
 
 [project.scripts]
 recon-reporter = "recon_reporter.cli:app"
@@ -27,3 +27,24 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["recon_reporter"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "C4"]
+ignore = [
+    "E501",  # long lines are acceptable in tables/prompts
+    "B008",  # typer.Option/Argument in defaults is the framework idiom, not a bug
+]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true       # anthropic / mcp are optional at runtime
+warn_redundant_casts = true
+no_implicit_optional = true
+files = ["recon_reporter"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

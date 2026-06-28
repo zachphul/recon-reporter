@@ -29,7 +29,7 @@ class Scope:
                 self._names.add(e.lower())
 
     @classmethod
-    def load(cls, path: str | Path) -> "Scope":
+    def load(cls, path: str | Path) -> Scope:
         data = yaml.safe_load(Path(path).read_text()) or {}
         entries = data.get("authorized_targets", [])
         if not entries:

@@ -16,20 +16,19 @@ from rich.console import Console
 
 # Windows legacy consoles default to cp1252; keep output UTF-8 safe.
 try:  # pragma: no cover
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
 except Exception:
     pass
 
-from . import __version__
+from . import __version__, logconf, store
 from . import diff as diffmod
-from . import store
 from .ai.analyst import get_analyst
 from .auth.scope import AuthorizationError, Scope
-from .collectors.nmap import NmapCollector
 from .collectors import tls as tlsmod
 from .collectors import whatweb as whatwebmod
 from .collectors.http_headers import HttpHeaderCollector
+from .collectors.nmap import NmapCollector
 from .config import settings
 from .enrich import rules
 from .enrich.cve import CveLookup
@@ -55,9 +54,12 @@ def scan(
     cve: bool = typer.Option(False, "--cve", help="Enrich services with NVD CVE matches (needs network)."),
     web: bool = typer.Option(False, "--web", help="Also run whatweb + sslscan (web/TLS recon)."),
     http: bool = typer.Option(False, "--http", help="Grade HTTP security headers (pure Python; needs network)."),
+    insecure: bool = typer.Option(False, "--insecure", help="Skip TLS cert verification for --http (reach bad-cert hosts)."),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose logging."),
     out: Path = typer.Option("runs", help="Output root directory."),
 ):
     """Run recon against TARGET and write a security report."""
+    logconf.setup(verbose)
     console.print(f"[bold]Recon Reporter[/bold] v{__version__}")
 
     # 1) Authorization gate
@@ -68,7 +70,7 @@ def scan(
             Scope.load(scope).require(target, acknowledged=authorized)
         except (AuthorizationError, FileNotFoundError) as e:
             console.print(f"[red]Authorization failed:[/red] {e}")
-            raise typer.Exit(2)
+            raise typer.Exit(2) from None
 
     started = datetime.now()
     run = ScanRun(target=target, started_at=started)
@@ -119,7 +121,7 @@ def scan(
     header_flags = []
     if http and not offline:
         console.print("[cyan]Grading HTTP security headers…[/cyan]")
-        header_flags = HttpHeaderCollector().collect(run.hosts)
+        header_flags = HttpHeaderCollector(verify=not insecure).collect(run.hosts)
         console.print(f"  {len(header_flags)} header finding(s).")
 
     # 3c) CVE enrichment

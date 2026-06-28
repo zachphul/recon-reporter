@@ -2,6 +2,16 @@
 
 All notable changes to Recon Reporter.
 
+## [Unreleased] — long-term hardening
+### Added
+- **Logging layer** (`logconf.py`) + `--verbose`; collectors/CVE now log failures with reasons
+  instead of swallowing them silently.
+- **ruff + mypy** configured and **clean** across 30 source files; `py.typed` marker (typed package).
+- CI now runs **ruff + mypy + pytest** (was pytest only).
+- `--insecure` flag for `--http` (TLS verify is now **on by default**; opt out explicitly).
+### Changed
+- `docs/QUALITY-PLAN.md` — the long-term hardening plan and quality bar.
+
 ## [0.3.1] — 2026-06-28
 ### Added
 - **Outdated-software detection** in the rule engine — version-compares disclosed products

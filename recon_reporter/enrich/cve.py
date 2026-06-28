@@ -12,7 +12,10 @@ from pathlib import Path
 
 import httpx
 
-from ..model import CveRef, Host, Service
+from ..logconf import get_logger
+from ..model import CveRef, Host
+
+log = get_logger(__name__)
 
 NVD_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 DEFAULT_CACHE = Path.home() / ".cache" / "recon-reporter" / "cve_cache.json"
@@ -90,7 +93,8 @@ class CveLookup:
                                  "summary": _summary(cve)})
                 self.cache[key] = rows
                 self._save_cache()
-            except Exception:
+            except Exception as e:  # noqa: BLE001 - degrade gracefully, but say why
+                log.warning("NVD lookup failed for %s %s: %s", product, version, e)
                 return []  # graceful: no CVEs rather than a crash
         refs = [CveRef(id=r["id"], cvss=r.get("cvss"), summary=r.get("summary"))
                 for r in rows if r.get("id")]

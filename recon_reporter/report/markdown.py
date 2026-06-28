@@ -31,7 +31,7 @@ def render(scan: ScanRun, analysis: Analysis | None) -> str:
 
     # Severity matrix from AI findings (fallback to rule flags)
     findings = analysis.findings if analysis else []
-    counts = {s: 0 for s in Severity}
+    counts = dict.fromkeys(Severity, 0)
     for f in findings:
         counts[f.severity] += 1
     if not findings:

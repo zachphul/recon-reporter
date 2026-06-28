@@ -3,9 +3,9 @@ from datetime import datetime
 from pathlib import Path
 
 from recon_reporter.collectors.http_headers import grade
-from recon_reporter.model import ScanRun, Severity
-from recon_reporter.parsers.nmap_xml import parse_nmap_xml
 from recon_reporter.enrich import rules
+from recon_reporter.model import ScanRun
+from recon_reporter.parsers.nmap_xml import parse_nmap_xml
 from recon_reporter.report import sarif as sarifrep
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_nmap.xml"

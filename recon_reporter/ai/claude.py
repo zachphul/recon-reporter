@@ -3,7 +3,7 @@ Imported lazily so the package works without `anthropic` installed when using --
 from __future__ import annotations
 
 from ..model import ScanRun
-from .base import Analysis, SYSTEM_PROMPT, build_prompt, ground
+from .base import SYSTEM_PROMPT, Analysis, build_prompt, ground
 
 
 class ClaudeAnalyst:
@@ -22,4 +22,6 @@ class ClaudeAnalyst:
             output_format=Analysis,
         )
         analysis = resp.parsed_output
+        if analysis is None:
+            raise RuntimeError("Claude returned no parseable structured output")
         return ground(analysis, scan)

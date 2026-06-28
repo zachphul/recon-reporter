@@ -15,5 +15,9 @@ jobs:
           python-version: "3.12"
       - name: Install
         run: pip install -e ".[dev]"
+      - name: Lint (ruff)
+        run: ruff check recon_reporter tests
+      - name: Types (mypy)
+        run: mypy
       - name: Test
         run: pytest -q
