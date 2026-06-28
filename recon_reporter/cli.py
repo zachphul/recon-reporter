@@ -8,7 +8,6 @@ Examples:
 from __future__ import annotations
 
 import sys
-from datetime import datetime
 from pathlib import Path
 
 import typer
@@ -21,19 +20,10 @@ try:  # pragma: no cover
 except Exception:
     pass
 
-from . import __version__, logconf, store
+from . import __version__, logconf, pipeline, store
 from . import diff as diffmod
-from .ai.analyst import get_analyst
 from .auth.scope import AuthorizationError, Scope
-from .collectors import tls as tlsmod
-from .collectors import whatweb as whatwebmod
-from .collectors.http_headers import HttpHeaderCollector
-from .collectors.nmap import NmapCollector
 from .config import settings
-from .enrich import rules
-from .enrich.cve import CveLookup
-from .model import ScanRun
-from .parsers.nmap_xml import parse_nmap_xml
 from .report import html as htmlrep
 from .report import markdown as md
 from .report import sarif as sarifrep
@@ -72,86 +62,37 @@ def scan(
             console.print(f"[red]Authorization failed:[/red] {e}")
             raise typer.Exit(2) from None
 
-    started = datetime.now()
-    run = ScanRun(target=target, started_at=started)
     run_dir = store.make_run_dir(target, out)
-
-    # 2) Collect
+    offline_xml = Path(offline).read_text(encoding="utf-8") if offline else None
     if offline:
-        xml = Path(offline).read_text(encoding="utf-8")
         console.print(f"[dim]Loaded offline nmap XML: {offline}[/dim]")
-        run.tool_versions["nmap"] = "offline"
-    else:
-        nm = NmapCollector(profile=profile)
-        if not nm.available():
-            console.print("[red]nmap not found on PATH. Install it (Kali ships with it) or use --offline.[/red]")
-            raise typer.Exit(3)
-        console.print(f"[cyan]Running nmap ({profile})…[/cyan] this can take a few minutes")
-        res = nm.run(target)
-        if not res.ok:
-            console.print(f"[red]nmap failed:[/red] {res.error}")
-            raise typer.Exit(3)
-        xml = res.raw
-        run.tool_versions["nmap"] = res.version or "unknown"
-    store.save_raw(run_dir, "nmap", xml)
 
-    # 3) Parse
-    run.hosts = parse_nmap_xml(xml)
+    # The pipeline does collect -> parse -> enrich -> rules -> AI; the CLI owns gate + I/O.
+    try:
+        result = pipeline.run_pipeline(
+            target,
+            offline_xml=offline_xml,
+            profile=profile, web=web, http=http, cve=cve,
+            insecure=insecure, no_ai=no_ai, settings=settings,
+            raw_sink=lambda tool, raw: store.save_raw(run_dir, tool, raw),
+            progress=lambda m: console.print(f"[cyan]{m}[/cyan]"),
+        )
+    except pipeline.PipelineError as e:
+        console.print(f"[red]{e}[/red]")
+        raise typer.Exit(3) from None
+
+    run = result.scan
+    analysis = result.analysis
     n_services = sum(len(h.services) for h in run.hosts)
-
-    # 3b) Extra web/TLS collectors (merge into the model before rules run)
-    if web and not offline:
-        for coll, merge, label in (
-            (whatwebmod.WhatWebCollector(), whatwebmod.merge_into_hosts, "whatweb"),
-            (tlsmod.TlsCollector(), tlsmod.merge_into_hosts, "sslscan"),
-        ):
-            if coll.available():
-                console.print(f"[cyan]Running {label}…[/cyan]")
-                r = coll.run(target)
-                if r.ok:
-                    store.save_raw(run_dir, label, r.raw)
-                    merge(r.raw, run.hosts)
-                    run.tool_versions[label] = "present"
-                else:
-                    console.print(f"[yellow]{label}: {r.error}[/yellow]")
-            else:
-                console.print(f"[dim]{label} not installed — skipping[/dim]")
-
-    # 3b2) HTTP security-header grading (pure Python; produces flags directly)
-    header_flags = []
-    if http and not offline:
-        console.print("[cyan]Grading HTTP security headers…[/cyan]")
-        header_flags = HttpHeaderCollector(verify=not insecure).collect(run.hosts)
-        console.print(f"  {len(header_flags)} header finding(s).")
-
-    # 3c) CVE enrichment
-    if cve:
-        console.print("[cyan]Querying NVD for CVEs…[/cyan] (rate-limited; cached)")
-        added = CveLookup(api_key=settings.nvd_api_key).enrich(run.hosts)
-        console.print(f"Attached [bold]{added}[/bold] CVE reference(s).")
-
-    # 4) Deterministic rule enrichment (after all collectors have contributed)
-    run.flags = rules.evaluate(run.hosts) + header_flags
     console.print(f"Parsed [bold]{len(run.hosts)}[/bold] host(s), "
                   f"[bold]{n_services}[/bold] open service(s), "
-                  f"[bold]{len(run.flags)}[/bold] rule flag(s).")
+                  f"[bold]{len(run.flags)}[/bold] finding(s).")
+    if analysis:
+        ungrounded = sum(1 for f in analysis.findings if not f.grounded)
+        console.print(f"AI produced [bold]{len(analysis.findings)}[/bold] finding(s)"
+                      + (f" ([yellow]{ungrounded} ungrounded[/yellow])" if ungrounded else ""))
 
-    # 5) AI analysis
-    analysis = None
-    if not no_ai:
-        provider = settings.resolved_provider()
-        console.print(f"[cyan]Analyzing with provider: {provider}[/cyan]")
-        try:
-            analysis = get_analyst().analyze(run)
-            ungrounded = sum(1 for f in analysis.findings if not f.grounded)
-            console.print(f"AI produced [bold]{len(analysis.findings)}[/bold] finding(s)"
-                          + (f" ([yellow]{ungrounded} ungrounded[/yellow])" if ungrounded else ""))
-        except Exception as e:
-            console.print(f"[yellow]AI analysis skipped ({type(e).__name__}: {e}). "
-                          f"Writing rule-based report.[/yellow]")
-
-    # 6) Persist (markdown + HTML + structured JSON)
-    run.finished_at = datetime.now()
+    # Persist (markdown + HTML + SARIF + structured JSON)
     store.save_findings(run_dir, run)
     report_path = store.save_report(run_dir, md.render(run, analysis))
     html_path = store.save_html(run_dir, htmlrep.render(run, analysis))

@@ -2,14 +2,19 @@
 
 All notable changes to Recon Reporter.
 
-## [Unreleased] — long-term hardening
+## [0.4.0] — 2026-06-28 — long-term hardening
 ### Added
-- **Logging layer** (`logconf.py`) + `--verbose`; collectors/CVE now log failures with reasons
+- **Extracted `pipeline.run_pipeline()`** — the recon pipeline is now a pure, unit-testable
+  function; the CLI is a thin shell over it (also reusable by the MCP server). +2 pipeline tests.
+- **Logging layer** (`logconf.py`) + `--verbose`; collectors/CVE/AI log failures with reasons
   instead of swallowing them silently.
-- **ruff + mypy** configured and **clean** across 30 source files; `py.typed` marker (typed package).
-- CI now runs **ruff + mypy + pytest** (was pytest only).
-- `--insecure` flag for `--http` (TLS verify is now **on by default**; opt out explicitly).
+- **ruff + mypy** configured and **clean** across 31 source files; `py.typed` marker (typed package).
+- CI runs **ruff + mypy + pytest** (was pytest only). `.gitattributes` (eol=lf).
+- Local AI analyst: JSON **repair + retry**; CVE parse/cache tests; SARIF dedup fingerprints +
+  rule help; empty-scan report tests; robust version parsing (epochs/suffixes).
+- Test suite grew 13 → **25**, all offline.
 ### Changed
+- `--http` TLS verification is **on by default**; opt out with `--insecure`.
 - `docs/QUALITY-PLAN.md` — the long-term hardening plan and quality bar.
 
 ## [0.3.1] — 2026-06-28

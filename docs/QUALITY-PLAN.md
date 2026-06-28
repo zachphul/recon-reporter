@@ -32,19 +32,19 @@ honest about its limits. Work the sequence top-to-bottom; each item has a clear 
 ## Hardening sequence (go slow — verify after each)
 
 **Foundation**
-- [ ] F1. Add `logging` (`logconf.py`) + `--verbose`; replace silent excepts with logged warnings.
-- [ ] F2. Add `ruff` + `mypy` config to `pyproject`; add `py.typed`; type-clean; wire both into CI.
+- [x] F1. Add `logging` (`logconf.py`) + `--verbose`; replace silent excepts with logged warnings.
+- [x] F2. Add `ruff` + `mypy` config to `pyproject`; add `py.typed`; type-clean; wire both into CI.
 
 **Phase 2 hardening**
-- [ ] P2a. Extract `pipeline.run()` from the CLI so the pipeline is unit-testable; CLI calls it.
-- [ ] P2b. AI layer: Claude effort + error surfacing; local JSON repair+retry; stronger grounding.
-- [ ] P2c. CVE: fixture parse test, cache-key hygiene, clearer "potential" labeling.
-- [ ] P2d. Reports: empty-scan tests; HTML/MD edge cases.
+- [x] P2a. Extract `pipeline.run()` from the CLI so the pipeline is unit-testable; CLI calls it.
+- [x] P2b. AI layer: Claude effort + error surfacing; local JSON repair+retry; stronger grounding.
+- [x] P2c. CVE: fixture parse test, cache-key hygiene, clearer "potential" labeling.
+- [x] P2d. Reports: empty-scan tests; HTML/MD edge cases.
 
 **Phase 3 hardening**
-- [ ] P3a. HTTP headers: documented `--insecure` toggle (default verify on); per-endpoint logging.
-- [ ] P3b. SARIF: `partialFingerprints` for dedup; rule `help` text; schema-shape test.
-- [ ] P3c. Rules: robust version parsing (suffixes/epochs); +1 rule pack with tests.
+- [x] P3a. HTTP headers: documented `--insecure` toggle (default verify on); per-endpoint logging.
+- [x] P3b. SARIF: `partialFingerprints` for dedup; rule `help` text; schema-shape test.
+- [x] P3c. Rules: robust version parsing (suffixes/epochs); +1 rule pack with tests.
 
 **Done = ruff clean, mypy clean, pytest green, docs updated, committed.**
 

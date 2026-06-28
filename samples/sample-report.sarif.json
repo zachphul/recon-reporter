@@ -6,7 +6,7 @@
       "tool": {
         "driver": {
           "name": "Recon Reporter",
-          "version": "0.3.1",
+          "version": "0.4.0",
           "informationUri": "https://github.com/zachphul/recon-reporter",
           "rules": [
             {
@@ -14,6 +14,12 @@
               "name": "Version disclosed: ssh OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13",
               "shortDescription": {
                 "text": "Version disclosed: ssh OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13"
+              },
+              "fullDescription": {
+                "text": "Version disclosed: ssh OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13"
+              },
+              "help": {
+                "text": "Version disclosed: ssh OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13. Review the affected service and remediate."
               },
               "defaultConfiguration": {
                 "level": "note"
@@ -25,6 +31,12 @@
               "shortDescription": {
                 "text": "Potentially outdated OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13"
               },
+              "fullDescription": {
+                "text": "Potentially outdated OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13"
+              },
+              "help": {
+                "text": "Potentially outdated OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13. Review the affected service and remediate."
+              },
               "defaultConfiguration": {
                 "level": "warning"
               }
@@ -34,6 +46,12 @@
               "name": "Telnet exposed",
               "shortDescription": {
                 "text": "Telnet exposed"
+              },
+              "fullDescription": {
+                "text": "Telnet exposed"
+              },
+              "help": {
+                "text": "Telnet exposed. Review the affected service and remediate."
               },
               "defaultConfiguration": {
                 "level": "error"
@@ -45,6 +63,12 @@
               "shortDescription": {
                 "text": "Cleartext protocol (Telnet)"
               },
+              "fullDescription": {
+                "text": "Cleartext protocol (Telnet)"
+              },
+              "help": {
+                "text": "Cleartext protocol (Telnet). Review the affected service and remediate."
+              },
               "defaultConfiguration": {
                 "level": "note"
               }
@@ -54,6 +78,12 @@
               "name": "Version disclosed: http Apache httpd 2.4.7",
               "shortDescription": {
                 "text": "Version disclosed: http Apache httpd 2.4.7"
+              },
+              "fullDescription": {
+                "text": "Version disclosed: http Apache httpd 2.4.7"
+              },
+              "help": {
+                "text": "Version disclosed: http Apache httpd 2.4.7. Review the affected service and remediate."
               },
               "defaultConfiguration": {
                 "level": "note"
@@ -65,6 +95,12 @@
               "shortDescription": {
                 "text": "Potentially outdated Apache httpd 2.4.7"
               },
+              "fullDescription": {
+                "text": "Potentially outdated Apache httpd 2.4.7"
+              },
+              "help": {
+                "text": "Potentially outdated Apache httpd 2.4.7. Review the affected service and remediate."
+              },
               "defaultConfiguration": {
                 "level": "warning"
               }
@@ -75,6 +111,12 @@
               "shortDescription": {
                 "text": "Weak/deprecated TLS"
               },
+              "fullDescription": {
+                "text": "Weak/deprecated TLS"
+              },
+              "help": {
+                "text": "Weak/deprecated TLS. Review the affected service and remediate."
+              },
               "defaultConfiguration": {
                 "level": "warning"
               }
@@ -84,6 +126,12 @@
               "name": "Version disclosed: https Apache httpd 2.4.7",
               "shortDescription": {
                 "text": "Version disclosed: https Apache httpd 2.4.7"
+              },
+              "fullDescription": {
+                "text": "Version disclosed: https Apache httpd 2.4.7"
+              },
+              "help": {
+                "text": "Version disclosed: https Apache httpd 2.4.7. Review the affected service and remediate."
               },
               "defaultConfiguration": {
                 "level": "note"
@@ -101,6 +149,9 @@
           },
           "properties": {
             "severity": "info"
+          },
+          "partialFingerprints": {
+            "reconReporter/v1": "befad193835d2df4"
           },
           "locations": [
             {
@@ -121,6 +172,9 @@
           "properties": {
             "severity": "medium"
           },
+          "partialFingerprints": {
+            "reconReporter/v1": "6d68f4bbcd4a871b"
+          },
           "locations": [
             {
               "physicalLocation": {
@@ -139,6 +193,9 @@
           },
           "properties": {
             "severity": "high"
+          },
+          "partialFingerprints": {
+            "reconReporter/v1": "7077adad5e332df1"
           },
           "locations": [
             {
@@ -159,6 +216,9 @@
           "properties": {
             "severity": "low"
           },
+          "partialFingerprints": {
+            "reconReporter/v1": "a323585a49852bb8"
+          },
           "locations": [
             {
               "physicalLocation": {
@@ -178,6 +238,9 @@
           "properties": {
             "severity": "info"
           },
+          "partialFingerprints": {
+            "reconReporter/v1": "6002cc5da18d0b58"
+          },
           "locations": [
             {
               "physicalLocation": {
@@ -196,6 +259,9 @@
           },
           "properties": {
             "severity": "medium"
+          },
+          "partialFingerprints": {
+            "reconReporter/v1": "00647f2522e0f130"
           },
           "locations": [
             {
@@ -216,6 +282,9 @@
           "properties": {
             "severity": "medium"
           },
+          "partialFingerprints": {
+            "reconReporter/v1": "b723440ddbc2a876"
+          },
           "locations": [
             {
               "physicalLocation": {
@@ -235,6 +304,9 @@
           "properties": {
             "severity": "info"
           },
+          "partialFingerprints": {
+            "reconReporter/v1": "286bda962995dbf6"
+          },
           "locations": [
             {
               "physicalLocation": {
@@ -253,6 +325,9 @@
           },
           "properties": {
             "severity": "medium"
+          },
+          "partialFingerprints": {
+            "reconReporter/v1": "8df35c3c1e980b85"
           },
           "locations": [
             {
