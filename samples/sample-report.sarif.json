@@ -1,0 +1,193 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Recon Reporter",
+          "version": "0.3.0",
+          "informationUri": "https://github.com/zachphul/recon-reporter",
+          "rules": [
+            {
+              "id": "version-disclosed--ssh-openssh-6-6-1p1-ubuntu-2ubuntu2-13",
+              "name": "Version disclosed: ssh OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13",
+              "shortDescription": {
+                "text": "Version disclosed: ssh OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.13"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            },
+            {
+              "id": "telnet-exposed",
+              "name": "Telnet exposed",
+              "shortDescription": {
+                "text": "Telnet exposed"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "cleartext-protocol--telnet",
+              "name": "Cleartext protocol (Telnet)",
+              "shortDescription": {
+                "text": "Cleartext protocol (Telnet)"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            },
+            {
+              "id": "version-disclosed--http-apache-httpd-2-4-7",
+              "name": "Version disclosed: http Apache httpd 2.4.7",
+              "shortDescription": {
+                "text": "Version disclosed: http Apache httpd 2.4.7"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            },
+            {
+              "id": "weak-deprecated-tls",
+              "name": "Weak/deprecated TLS",
+              "shortDescription": {
+                "text": "Weak/deprecated TLS"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "version-disclosed--https-apache-httpd-2-4-7",
+              "name": "Version disclosed: https Apache httpd 2.4.7",
+              "shortDescription": {
+                "text": "Version disclosed: https Apache httpd 2.4.7"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "version-disclosed--ssh-openssh-6-6-1p1-ubuntu-2ubuntu2-13",
+          "level": "note",
+          "message": {
+            "text": "Exact product/version is visible; useful for CVE matching."
+          },
+          "properties": {
+            "severity": "info"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "45.33.32.156:22"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "telnet-exposed",
+          "level": "error",
+          "message": {
+            "text": "Telnet transmits credentials in cleartext; replace with SSH."
+          },
+          "properties": {
+            "severity": "high"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "45.33.32.156:23"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "cleartext-protocol--telnet",
+          "level": "note",
+          "message": {
+            "text": "Service uses an unencrypted protocol."
+          },
+          "properties": {
+            "severity": "low"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "45.33.32.156:23"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "version-disclosed--http-apache-httpd-2-4-7",
+          "level": "note",
+          "message": {
+            "text": "Exact product/version is visible; useful for CVE matching."
+          },
+          "properties": {
+            "severity": "info"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "45.33.32.156:80"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "weak-deprecated-tls",
+          "level": "warning",
+          "message": {
+            "text": "Server negotiates a deprecated TLS/SSL version."
+          },
+          "properties": {
+            "severity": "medium"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "45.33.32.156:443"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "version-disclosed--https-apache-httpd-2-4-7",
+          "level": "note",
+          "message": {
+            "text": "Exact product/version is visible; useful for CVE matching."
+          },
+          "properties": {
+            "severity": "info"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "45.33.32.156:443"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
