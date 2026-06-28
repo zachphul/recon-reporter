@@ -12,6 +12,8 @@ FIXTURE = Path(__file__).parent / "fixtures" / "sample_nmap.xml"
 def test_ver_tuple():
     assert _ver_tuple("6.6.1p1") == (6, 6, 1)
     assert _ver_tuple("2.4.7") == (2, 4, 7)
+    assert _ver_tuple("1:2.4.7") == (2, 4, 7)   # Debian epoch stripped
+    assert _ver_tuple("1.18.0-ubuntu") == (1, 18, 0)
     assert _ver_tuple("") == ()
     assert _ver_tuple("nope") == ()
 

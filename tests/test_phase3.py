@@ -45,3 +45,6 @@ def test_sarif_is_valid_shape():
     assert len(runs[0]["results"]) == len(run.flags)
     levels = {r["level"] for r in runs[0]["results"]}
     assert levels <= {"error", "warning", "note"}
+    # hardening: stable dedup fingerprints + rule help text
+    assert all("partialFingerprints" in r for r in runs[0]["results"])
+    assert all("help" in rule for rule in runs[0]["tool"]["driver"]["rules"])

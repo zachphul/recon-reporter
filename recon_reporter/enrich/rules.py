@@ -28,10 +28,14 @@ def _flag(host: str, sev: Severity, title: str, detail: str, port: int | None = 
 
 
 def _ver_tuple(s: str) -> tuple[int, ...]:
-    """Extract a leading numeric version like '6.6.1p1' -> (6, 6, 1)."""
+    """Extract a leading numeric version. Handles suffixes ('6.6.1p1' -> (6,6,1)) and
+    Debian-style epochs ('1:2.4.7' -> (2,4,7))."""
     import re
 
-    m = re.match(r"(\d+(?:\.\d+)*)", (s or "").strip())
+    s = (s or "").strip()
+    if ":" in s:  # strip an epoch prefix like "1:2.4.7"
+        s = s.split(":", 1)[1]
+    m = re.match(r"(\d+(?:\.\d+)*)", s)
     if not m:
         return ()
     return tuple(int(x) for x in m.group(1).split("."))

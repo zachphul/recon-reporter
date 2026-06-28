@@ -3,6 +3,7 @@ scanning, Azure DevOps, and most security dashboards. Lets a Recon Reporter run 
 straight into a CI security gate."""
 from __future__ import annotations
 
+import hashlib
 import json
 
 from .. import __version__
@@ -28,19 +29,25 @@ def to_sarif(scan: ScanRun, analysis: Analysis | None) -> dict:
 
     def add(title: str, severity: Severity, location: str, text: str):
         rid = _rule_id(title)
+        loc = location or scan.target
         rules.setdefault(rid, {
             "id": rid,
             "name": title,
             "shortDescription": {"text": title},
+            "fullDescription": {"text": title},
+            "help": {"text": f"{title}. Review the affected service and remediate."},
             "defaultConfiguration": {"level": _LEVEL[severity]},
         })
+        # Stable fingerprint so the same finding dedups across runs in code-scanning UIs.
+        fp = hashlib.sha256(f"{rid}|{loc}".encode()).hexdigest()[:16]
         results.append({
             "ruleId": rid,
             "level": _LEVEL[severity],
             "message": {"text": text},
             "properties": {"severity": severity.value},
+            "partialFingerprints": {"reconReporter/v1": fp},
             "locations": [{
-                "physicalLocation": {"artifactLocation": {"uri": location or scan.target}}
+                "physicalLocation": {"artifactLocation": {"uri": loc}}
             }],
         })
 
