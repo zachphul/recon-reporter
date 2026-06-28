@@ -22,15 +22,20 @@ except Exception:
     pass
 
 from . import __version__
+from . import diff as diffmod
+from . import store
 from .ai.analyst import get_analyst
 from .auth.scope import AuthorizationError, Scope
 from .collectors.nmap import NmapCollector
+from .collectors import tls as tlsmod
+from .collectors import whatweb as whatwebmod
 from .config import settings
 from .enrich import rules
+from .enrich.cve import CveLookup
 from .model import ScanRun
 from .parsers.nmap_xml import parse_nmap_xml
+from .report import html as htmlrep
 from .report import markdown as md
-from . import store
 
 app = typer.Typer(add_completion=False, help="AI-assisted reconnaissance reporting.")
 console = Console()
@@ -45,6 +50,8 @@ def scan(
     offline: Path = typer.Option(None, help="Use an existing nmap XML file instead of scanning."),
     no_scope_check: bool = typer.Option(False, "--no-scope-check", help="Skip scope gate (only valid with --offline)."),
     no_ai: bool = typer.Option(False, "--no-ai", help="Skip the LLM analysis (rule findings only)."),
+    cve: bool = typer.Option(False, "--cve", help="Enrich services with NVD CVE matches (needs network)."),
+    web: bool = typer.Option(False, "--web", help="Also run whatweb + sslscan (web/TLS recon)."),
     out: Path = typer.Option("runs", help="Output root directory."),
 ):
     """Run recon against TARGET and write a security report."""
@@ -83,10 +90,36 @@ def scan(
         run.tool_versions["nmap"] = res.version or "unknown"
     store.save_raw(run_dir, "nmap", xml)
 
-    # 3) Parse + 4) rule enrichment
+    # 3) Parse
     run.hosts = parse_nmap_xml(xml)
-    run.flags = rules.evaluate(run.hosts)
     n_services = sum(len(h.services) for h in run.hosts)
+
+    # 3b) Extra web/TLS collectors (merge into the model before rules run)
+    if web and not offline:
+        for coll, merge, label in (
+            (whatwebmod.WhatWebCollector(), whatwebmod.merge_into_hosts, "whatweb"),
+            (tlsmod.TlsCollector(), tlsmod.merge_into_hosts, "sslscan"),
+        ):
+            if coll.available():
+                console.print(f"[cyan]Running {label}…[/cyan]")
+                r = coll.run(target)
+                if r.ok:
+                    store.save_raw(run_dir, label, r.raw)
+                    merge(r.raw, run.hosts)
+                    run.tool_versions[label] = "present"
+                else:
+                    console.print(f"[yellow]{label}: {r.error}[/yellow]")
+            else:
+                console.print(f"[dim]{label} not installed — skipping[/dim]")
+
+    # 3c) CVE enrichment
+    if cve:
+        console.print("[cyan]Querying NVD for CVEs…[/cyan] (rate-limited; cached)")
+        added = CveLookup(api_key=settings.nvd_api_key).enrich(run.hosts)
+        console.print(f"Attached [bold]{added}[/bold] CVE reference(s).")
+
+    # 4) Deterministic rule enrichment (after all collectors have contributed)
+    run.flags = rules.evaluate(run.hosts)
     console.print(f"Parsed [bold]{len(run.hosts)}[/bold] host(s), "
                   f"[bold]{n_services}[/bold] open service(s), "
                   f"[bold]{len(run.flags)}[/bold] rule flag(s).")
@@ -105,13 +138,31 @@ def scan(
             console.print(f"[yellow]AI analysis skipped ({type(e).__name__}: {e}). "
                           f"Writing rule-based report.[/yellow]")
 
-    # 6) Persist
+    # 6) Persist (markdown + HTML + structured JSON)
     run.finished_at = datetime.now()
     store.save_findings(run_dir, run)
     report_path = store.save_report(run_dir, md.render(run, analysis))
+    html_path = store.save_html(run_dir, htmlrep.render(run, analysis))
 
     console.print(f"\n[green]Report written:[/green] {report_path}")
+    console.print(f"[green]HTML report:[/green]    {html_path}")
     console.print(f"[dim]  Raw + findings.json in {run_dir}[/dim]")
+
+
+@app.command()
+def diff(
+    old: Path = typer.Argument(..., help="Older findings.json"),
+    new: Path = typer.Argument(..., help="Newer findings.json"),
+    out: Path = typer.Option(None, help="Write the diff markdown here (else print)."),
+):
+    """Compare two saved runs and report what changed (drift over time)."""
+    d = diffmod.diff_runs(diffmod.load_run(old), diffmod.load_run(new))
+    report = diffmod.render_markdown(d)
+    if out:
+        Path(out).write_text(report, encoding="utf-8")
+        console.print(f"[green]Diff written:[/green] {out}")
+    else:
+        console.print(report)
 
 
 @app.command()

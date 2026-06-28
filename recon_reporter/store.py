@@ -31,3 +31,9 @@ def save_report(run_dir: Path, markdown: str) -> Path:
     p = run_dir / "report.md"
     p.write_text(markdown, encoding="utf-8")
     return p
+
+
+def save_html(run_dir: Path, html: str) -> Path:
+    p = run_dir / "report.html"
+    p.write_text(html, encoding="utf-8")
+    return p
