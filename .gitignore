@@ -1,0 +1,17 @@
+# Runs / output (may contain scan data)
+runs/
+*.xml
+!tests/fixtures/*.xml
+
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+build/
+dist/

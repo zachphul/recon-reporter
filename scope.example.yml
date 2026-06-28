@@ -1,0 +1,6 @@
+# Authorization scope — Recon Reporter refuses any target not listed here.
+# Only add hosts you OWN or have EXPLICIT written permission to test.
+authorized_targets:
+  - scanme.nmap.org      # Nmap's official, sanctioned practice target
+  - 127.0.0.1            # your own machine
+  - 192.168.56.0/24      # example: your local lab VM subnet (VirtualBox host-only)

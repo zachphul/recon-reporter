@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nmaprun scanner="nmap" args="nmap -sV -sC -oX - scanme.nmap.org" version="7.94">
+  <host>
+    <status state="up" reason="echo-reply"/>
+    <address addr="45.33.32.156" addrtype="ipv4"/>
+    <hostnames>
+      <hostname name="scanme.nmap.org" type="user"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack"/>
+        <service name="ssh" product="OpenSSH" version="6.6.1p1 Ubuntu 2ubuntu2.13" extrainfo="Ubuntu Linux; protocol 2.0"/>
+        <script id="ssh-hostkey" output="2048 ac:00:a0:1a:82:ff (RSA)"/>
+      </port>
+      <port protocol="tcp" portid="23">
+        <state state="open" reason="syn-ack"/>
+        <service name="telnet" product="Linux telnetd"/>
+      </port>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack"/>
+        <service name="http" product="Apache httpd" version="2.4.7" extrainfo="(Ubuntu)"/>
+        <script id="http-title" output="Go ahead and ScanMe!"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack"/>
+        <service name="https" product="Apache httpd" version="2.4.7"/>
+        <script id="ssl-enum-ciphers" output="TLSv1.0: weak ciphers offered; TLSv1.1; TLSv1.2"/>
+      </port>
+    </ports>
+    <os>
+      <osmatch name="Linux 3.2 - 4.9" accuracy="95"/>
+    </os>
+  </host>
+</nmaprun>
