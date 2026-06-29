@@ -8,6 +8,9 @@ All notable changes to Recon Reporter.
   `diff.md`; `--fail-on-new` exits 1 when findings appear (for CI/alerting).
 - **`dashboard` command** — aggregate every run under `runs/` into a single dark HTML index.
 - **Optional `--pdf`** export (weasyprint; degrades gracefully with a how-to when absent).
+- **Expanded rule packs** — VNC/remote-access exposure (HIGH), legacy/risky services
+  (MSRPC, rpcbind, LDAP, X11, NFS, r-services), more sensitive datastores, and a host-level
+  "large attack surface" check. +2 tests.
 - **`_execute_scan` helper** — scan & monitor share one gate→pipeline→persist core (DRY).
 - `make_run_dir` now collision-safe for back-to-back runs; `store.latest_findings()` lookup.
 - CLI integration tests (Typer runner) + store/dashboard/PDF tests. Suite 25 → **34**.

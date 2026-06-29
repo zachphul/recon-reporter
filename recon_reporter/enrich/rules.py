@@ -7,8 +7,16 @@ from ..model import Host, RuleFlag, Service, Severity
 
 CLEARTEXT_PORTS = {21: "FTP", 23: "Telnet", 80: "HTTP", 110: "POP3", 143: "IMAP"}
 SENSITIVE_EXPOSED = {3389: "RDP", 445: "SMB", 5432: "PostgreSQL", 3306: "MySQL",
-                     27017: "MongoDB", 6379: "Redis", 9200: "Elasticsearch"}
+                     27017: "MongoDB", 6379: "Redis", 9200: "Elasticsearch",
+                     5984: "CouchDB", 11211: "Memcached", 9000: "PHP-FPM"}
+# Interactive remote-control services reachable from the network = high risk.
+REMOTE_ACCESS = {5900: "VNC", 5901: "VNC", 5902: "VNC"}
+# Legacy / information-leaking services worth flagging.
+LEGACY_RISKY = {135: "MSRPC", 111: "rpcbind", 389: "LDAP (cleartext)",
+                6000: "X11", 2049: "NFS", 512: "rexec", 513: "rlogin", 514: "rsh"}
 WEAK_TLS_MARKERS = ("SSLv3", "TLSv1.0", "TLSv1.1", "SSLv2")
+# Above this many open services on one host, surface area is itself a finding.
+LARGE_SURFACE_THRESHOLD = 15
 
 # product (substring, case-insensitive) -> a recent-ish baseline version tuple.
 # Anything below is flagged as POTENTIALLY outdated (verify against the vendor advisory).
@@ -65,6 +73,12 @@ def evaluate(hosts: list[Host]) -> list[RuleFlag]:
     for h in hosts:
         for s in h.services:
             flags.extend(_evaluate_service(h.address, s))
+        # host-level: a large open surface area is a finding in itself
+        n_open = sum(1 for s in h.services if s.state == "open")
+        if n_open >= LARGE_SURFACE_THRESHOLD:
+            flags.append(_flag(h.address, Severity.MEDIUM, "Large attack surface",
+                               f"{n_open} services are open on this host; reduce exposure to "
+                               f"what is strictly required."))
     return flags
 
 
@@ -81,6 +95,13 @@ def _evaluate_service(host: str, s: Service) -> list[RuleFlag]:
     if p in SENSITIVE_EXPOSED:
         out.append(_flag(host, Severity.MEDIUM, f"{SENSITIVE_EXPOSED[p]} reachable",
                          f"{SENSITIVE_EXPOSED[p]} on port {p} is exposed; restrict to trusted networks.", p))
+    if p in REMOTE_ACCESS:
+        out.append(_flag(host, Severity.HIGH, f"{REMOTE_ACCESS[p]} remote access exposed",
+                         f"{REMOTE_ACCESS[p]} remote-control service on port {p} is reachable; "
+                         f"restrict to VPN/trusted networks and require strong auth.", p))
+    if p in LEGACY_RISKY:
+        out.append(_flag(host, Severity.MEDIUM, f"Legacy/risky service: {LEGACY_RISKY[p]}",
+                         f"{LEGACY_RISKY[p]} on port {p} is often misconfigured or information-leaking.", p))
     if p in CLEARTEXT_PORTS and p not in (80,):
         out.append(_flag(host, Severity.LOW, f"Cleartext protocol ({CLEARTEXT_PORTS[p]})",
                          "Service uses an unencrypted protocol.", p))
