@@ -1,5 +1,23 @@
 """CVE enrichment tests — CVSS/summary parsing and cache hit. No network."""
-from recon_reporter.enrich.cve import CveLookup, _cvss, _summary
+from recon_reporter.enrich.cve import (
+    CveLookup,
+    _cvss,
+    _summary,
+    cpe_for,
+    virtual_match_string,
+)
+
+
+def test_cpe_for_known_and_unknown():
+    assert cpe_for("OpenSSH") == ("openbsd", "openssh")
+    assert cpe_for("Apache httpd") == ("apache", "http_server")
+    assert cpe_for("Some Unknown Daemon") is None
+
+
+def test_virtual_match_string_builds_cpe():
+    assert virtual_match_string("OpenSSH", "6.6.1") == "cpe:2.3:a:openbsd:openssh:6.6.1"
+    assert virtual_match_string("OpenSSH", "") == "cpe:2.3:a:openbsd:openssh:*"
+    assert virtual_match_string("nothing-known", "1.0") is None
 
 
 def test_cvss_prefers_v31():

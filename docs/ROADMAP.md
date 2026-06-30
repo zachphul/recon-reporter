@@ -22,8 +22,9 @@
 - [x] `dashboard` command — HTML index of all runs
 
 ## ⏳ Later
+- [x] CPE-based CVE matching for known products (precise NVD `virtualMatchString`; keyword fallback)
+- [ ] Expand the product→CPE map (currently ~14 common products)
 - [ ] More rule packs (CIS-style checks, exposed-secret heuristics)
-- [ ] CPE-based CVE matching (move beyond keyword search)
 - [ ] Scheduled-deploy wrapper (cron) around `monitor`
 - [ ] Severity calibration from CVSS + exposure (move beyond keyword CVE match to CPE)
 - [ ] Scheduled monitoring mode (cron → scan → diff → alert on new findings)

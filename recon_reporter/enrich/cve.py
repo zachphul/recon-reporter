@@ -40,6 +40,46 @@ def _summary(cve: dict) -> str | None:
     return None
 
 
+# nmap product name (lowercase substring) -> (CPE vendor, CPE product). When a product
+# maps, we query NVD by precise CPE (virtualMatchString) instead of fuzzy keyword search,
+# which sharply cuts false-positive CVEs.
+PRODUCT_CPE = {
+    "openssh": ("openbsd", "openssh"),
+    "apache httpd": ("apache", "http_server"),
+    "nginx": ("nginx", "nginx"),
+    "vsftpd": ("vsftpd", "vsftpd"),
+    "proftpd": ("proftpd", "proftpd"),
+    "mysql": ("oracle", "mysql"),
+    "mariadb": ("mariadb", "mariadb"),
+    "postgresql": ("postgresql", "postgresql"),
+    "openssl": ("openssl", "openssl"),
+    "exim": ("exim", "exim"),
+    "postfix": ("postfix", "postfix"),
+    "isc bind": ("isc", "bind"),
+    "samba": ("samba", "samba"),
+    "lighttpd": ("lighttpd", "lighttpd"),
+}
+
+
+def cpe_for(product: str) -> tuple[str, str] | None:
+    """Map an nmap product string to (CPE vendor, CPE product), or None if unknown."""
+    name = (product or "").lower()
+    for key, vp in PRODUCT_CPE.items():
+        if key in name:
+            return vp
+    return None
+
+
+def virtual_match_string(product: str, version: str) -> str | None:
+    """Build an NVD virtualMatchString CPE for precise matching, or None to fall back."""
+    vp = cpe_for(product)
+    if not vp:
+        return None
+    vendor, prod = vp
+    ver = (version or "").strip() or "*"
+    return f"cpe:2.3:a:{vendor}:{prod}:{ver}"
+
+
 class CveLookup:
     def __init__(self, api_key: str | None = None, max_per_service: int = 5,
                  cache_path: Path | None = None, rate_delay: float = 6.0):
@@ -78,12 +118,12 @@ class CveLookup:
             try:
                 self._throttle()
                 headers = {"apiKey": self.api_key} if self.api_key else {}
-                r = httpx.get(
-                    NVD_URL,
-                    params={"keywordSearch": f"{product} {version}",
-                            "keywordExactMatch": "", "resultsPerPage": 20},
-                    headers=headers, timeout=30,
-                )
+                vms = virtual_match_string(product, version)
+                if vms:  # precise CPE match when we know the product
+                    params: dict = {"virtualMatchString": vms, "resultsPerPage": 20}
+                else:     # fall back to fuzzy keyword search
+                    params = {"keywordSearch": f"{product} {version}", "resultsPerPage": 20}
+                r = httpx.get(NVD_URL, params=params, headers=headers, timeout=30)
                 r.raise_for_status()
                 vulns = r.json().get("vulnerabilities", [])
                 rows = []
