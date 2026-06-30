@@ -37,6 +37,21 @@ def test_scope_gate_blocks_via_cli(tmp_path):
     assert res.exit_code == 2
 
 
+def test_offline_missing_file_exits_cleanly(tmp_path):
+    res = runner.invoke(app, ["scan", "x", "--offline", str(tmp_path / "nope.xml"),
+                              "--no-scope-check", "--no-ai", "--out", str(tmp_path)])
+    assert res.exit_code == 3
+    assert "not found" in res.output.lower()
+    # no run dir should have been created for a failed offline load
+    assert not list(tmp_path.glob("x-*"))
+
+
+def test_diff_missing_file_exits_cleanly(tmp_path):
+    res = runner.invoke(app, ["diff", str(tmp_path / "a.json"), str(tmp_path / "b.json")])
+    assert res.exit_code == 2
+    assert "not found" in res.output.lower()
+
+
 def test_dashboard_cli(tmp_path):
     runner.invoke(app, ["scan", "demo", "--offline", FIXTURE, "--no-scope-check",
                         "--no-ai", "--out", str(tmp_path)])

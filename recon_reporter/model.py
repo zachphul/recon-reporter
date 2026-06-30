@@ -69,10 +69,14 @@ class ScanRun(BaseModel):
     flags: list[RuleFlag] = Field(default_factory=list)
 
     def all_endpoints(self) -> set[str]:
-        """host:port strings present in this scan — used to ground AI findings."""
+        """host / host:port strings present in this scan — used to ground AI findings.
+        Includes both the IP address and the hostname so a finding referencing either
+        form is recognised as grounded."""
         out: set[str] = set()
         for h in self.hosts:
-            out.add(h.address)
+            names = [h.address] + ([h.hostname] if h.hostname else [])
+            out.update(names)
             for s in h.services:
-                out.add(f"{h.address}:{s.port}")
+                for n in names:
+                    out.add(f"{n}:{s.port}")
         return out

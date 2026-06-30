@@ -3,8 +3,27 @@ import json
 from datetime import datetime
 
 import recon_reporter.ai.local as localmod
+from recon_reporter.ai.base import Analysis, AnalyzedFinding, ground
 from recon_reporter.ai.local import LocalAnalyst
-from recon_reporter.model import ScanRun
+from recon_reporter.model import Host, ScanRun, Service, Severity
+
+
+def test_grounding_accepts_hostname_or_ip():
+    run = ScanRun(target="t", started_at=datetime.now(), hosts=[
+        Host(address="1.2.3.4", hostname="web.example", services=[Service(port=80)]),
+    ])
+    a = Analysis(executive_summary="", attack_narrative="", findings=[
+        AnalyzedFinding(title="by hostname", severity=Severity.LOW, affected="web.example:80",
+                        why_it_matters="", remediation="", evidence=""),
+        AnalyzedFinding(title="by ip", severity=Severity.LOW, affected="1.2.3.4:80",
+                        why_it_matters="", remediation="", evidence=""),
+        AnalyzedFinding(title="invented", severity=Severity.LOW, affected="9.9.9.9:443",
+                        why_it_matters="", remediation="", evidence=""),
+    ])
+    ground(a, run)
+    assert a.findings[0].grounded is True   # hostname form now recognised
+    assert a.findings[1].grounded is True   # ip form
+    assert a.findings[2].grounded is False  # not in scan -> flagged
 
 _VALID = json.dumps({
     "executive_summary": "Summary.",

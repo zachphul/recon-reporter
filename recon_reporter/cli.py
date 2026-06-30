@@ -53,8 +53,14 @@ def _execute_scan(
             console.print(f"[red]Authorization failed:[/red] {e}")
             raise typer.Exit(2) from None
 
+    offline_xml = None
+    if offline:
+        if not Path(offline).is_file():
+            console.print(f"[red]Offline file not found:[/red] {offline}")
+            raise typer.Exit(3) from None
+        offline_xml = Path(offline).read_text(encoding="utf-8")
+
     run_dir = store.make_run_dir(target, out)
-    offline_xml = Path(offline).read_text(encoding="utf-8") if offline else None
     if offline:
         console.print(f"[dim]Loaded offline nmap XML: {offline}[/dim]")
 
@@ -164,6 +170,10 @@ def diff(
     out: Path = typer.Option(None, help="Write the diff markdown here (else print)."),
 ):
     """Compare two saved runs and report what changed (drift over time)."""
+    for p in (old, new):
+        if not Path(p).is_file():
+            console.print(f"[red]File not found:[/red] {p}")
+            raise typer.Exit(2) from None
     d = diffmod.diff_runs(diffmod.load_run(old), diffmod.load_run(new))
     report = diffmod.render_markdown(d)
     if out:
