@@ -56,3 +56,12 @@ def test_csv_export_rows_match_flags():
     assert "telnet" in out.lower()
     # severity-ranked: first data row is the highest severity present
     assert lines[1].split(",")[0] in {"critical", "high"}
+
+
+def test_terminal_findings_table():
+    from recon_reporter.report import terminal
+    run = ScanRun(target="x", started_at=datetime.now())
+    run.hosts = parse_nmap_xml(FIXTURE.read_text(encoding="utf-8"))
+    run.flags = rules.evaluate(run.hosts)
+    assert terminal.findings_table(run).row_count == len(run.flags)
+    assert terminal.findings_table(_empty()).row_count == 1  # placeholder row

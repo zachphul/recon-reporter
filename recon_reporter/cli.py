@@ -30,6 +30,7 @@ from .report import html as htmlrep
 from .report import markdown as md
 from .report import pdf as pdfrep
 from .report import sarif as sarifrep
+from .report import terminal as termrep
 
 app = typer.Typer(add_completion=False, help="AI-assisted reconnaissance reporting.")
 console = Console()
@@ -116,7 +117,8 @@ def scan(
         ungrounded = sum(1 for f in analysis.findings if not f.grounded)
         console.print(f"AI produced [bold]{len(analysis.findings)}[/bold] finding(s)"
                       + (f" ([yellow]{ungrounded} ungrounded[/yellow])" if ungrounded else ""))
-    console.print(f"\n[green]Reports:[/green] {run_dir}\\report.md · report.html · report.sarif.json")
+    console.print(termrep.findings_table(run))
+    console.print(f"[green]Reports:[/green] {run_dir}\\report.md · .html · .sarif.json · findings.csv")
 
 
 @app.command()
