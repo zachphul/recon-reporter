@@ -14,6 +14,8 @@ All notable changes to Recon Reporter.
 - **CPE-based CVE matching** — known products (OpenSSH, Apache, nginx, …) query NVD by precise
   CPE (`virtualMatchString`) instead of fuzzy keyword search, cutting false positives; unknown
   products fall back to keyword. +2 tests.
+- **CSV findings export** (`findings.csv`, every run) — flat, severity-ranked rows for triage
+  in a spreadsheet or SIEM import. +1 test.
 - **`_execute_scan` helper** — scan & monitor share one gate→pipeline→persist core (DRY).
 - `make_run_dir` now collision-safe for back-to-back runs; `store.latest_findings()` lookup.
 - CLI integration tests (Typer runner) + store/dashboard/PDF tests. Suite 25 → **34**.

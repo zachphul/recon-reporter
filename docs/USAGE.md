@@ -62,7 +62,8 @@ recon-reporter scan 127.0.0.1 --scope scope.yml --authorized --no-ai
 recon-reporter scan demo --offline tests/fixtures/sample_nmap.xml --no-scope-check --no-ai
 ```
 
-Output: `runs/<target>-<timestamp>/` → `report.md`, `report.html`, `findings.json`, `raw/`.
+Output: `runs/<target>-<timestamp>/` → `report.md`, `report.html`, `report.sarif.json`,
+`findings.csv`, `findings.json`, `raw/`.
 
 ### `diff`
 

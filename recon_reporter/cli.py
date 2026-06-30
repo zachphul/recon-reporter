@@ -25,6 +25,7 @@ from . import dashboard as dashmod
 from . import diff as diffmod
 from .auth.scope import AuthorizationError, Scope
 from .config import settings
+from .report import csv as csvrep
 from .report import html as htmlrep
 from .report import markdown as md
 from .report import pdf as pdfrep
@@ -72,6 +73,7 @@ def _execute_scan(
     store.save_report(run_dir, md.render(run, analysis))
     store.save_html(run_dir, htmlrep.render(run, analysis))
     store.save_sarif(run_dir, sarifrep.dumps(run, analysis))
+    store.save_csv(run_dir, csvrep.to_csv(run, analysis))
     return run, analysis, run_dir
 
 

@@ -64,3 +64,9 @@ def save_sarif(run_dir: Path, sarif: str) -> Path:
     p = run_dir / "report.sarif.json"
     p.write_text(sarif, encoding="utf-8")
     return p
+
+
+def save_csv(run_dir: Path, csv_text: str) -> Path:
+    p = run_dir / "findings.csv"
+    p.write_text(csv_text, encoding="utf-8")
+    return p
