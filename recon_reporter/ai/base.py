@@ -7,12 +7,28 @@ from pydantic import BaseModel, Field
 from ..model import ScanRun, Severity
 
 
+class RemediationStep(BaseModel):
+    action: str = Field(description="One-line summary of what to do")
+    command: str | None = Field(
+        default=None,
+        description="Exact shell command or config snippet to execute (if applicable)",
+    )
+    description: str = Field(
+        default="",
+        description="Longer explanation of why this step matters and what to verify after",
+    )
+
+
 class AnalyzedFinding(BaseModel):
     title: str
     severity: Severity
     affected: str = Field(description="host or host:port this finding concerns")
     why_it_matters: str
     remediation: str
+    remediation_steps: list[RemediationStep] = Field(
+        default_factory=list,
+        description="Ordered, actionable steps to remediate this finding",
+    )
     evidence: str = Field(description="what in the scan data supports this")
     grounded: bool = True  # set by post-validation, not the model
 
@@ -32,6 +48,14 @@ SYSTEM_PROMPT = (
     "- Rank by real-world exploitability and business impact, not raw port count.\n"
     "- For each finding give: title, severity, affected host:port, why it matters, and a "
     "concrete remediation.\n"
+    "- Provide specific, actionable remediation_steps for each finding. Each step should have:\n"
+    "  - action: a one-line summary\n"
+    "  - command: the exact shell command, sshd_config line, or config snippet (if applicable)\n"
+    "  - description: why this step matters and what to verify after\n"
+    "- Use real commands (e.g. 'sudo systemctl restart sshd', 'sudo ufw deny 23/tcp'). "
+    "Do NOT use placeholder commands.\n"
+    "- For CVE findings, include specific version upgrade commands or patch references.\n"
+    "- Order steps from most critical to least critical.\n"
     "- If the data is thin, say so plainly rather than padding.\n"
 )
 

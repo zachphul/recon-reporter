@@ -1,0 +1,29 @@
+# Bug Bounty Program Scope Example
+#
+# Load with: recon-reporter scan app.example.com --bug-bounty scope.bugbounty.yml --authorized
+#
+# This file defines the authorized targets for a bug bounty program.
+# The scope gate will refuse to scan any target not listed here.
+
+program_name: "Example Corp Bug Bounty"
+program_url: "https://bugcrowd.com/example-corp"
+rules_url: "https://bugcrowd.com/example-corp/rules"
+max_severity: "critical"
+
+# In-scope targets (domains, IPs, CIDR ranges, wildcards)
+in_scope:
+  - "example.com"
+  - "*.example.com"
+  - "app.example.com"
+  - "api.example.com"
+  - "staging.example.com"
+  - "203.0.113.0/24"
+
+# Out-of-scope targets (explicitly excluded)
+out_of_scope:
+  - "admin.example.com"
+  - "internal.example.com"
+  - "*.example.com"
+  - "demo.example.com"
+  - "test.example.com"
+  - "198.51.100.0/24"   # internal network range

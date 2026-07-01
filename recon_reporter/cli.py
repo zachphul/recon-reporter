@@ -4,6 +4,7 @@ Examples:
   recon-reporter scan scanme.nmap.org --scope scope.yml --authorized
   recon-reporter scan 127.0.0.1 --scope scope.yml --authorized --no-ai
   recon-reporter scan demo --offline tests/fixtures/sample_nmap.xml --no-scope-check
+  recon-reporter scan app.target.com --bug-bounty program.yml --authorized --cve --web
 """
 from __future__ import annotations
 
@@ -23,8 +24,10 @@ except Exception:
 from . import __version__, logconf, pipeline, store
 from . import dashboard as dashmod
 from . import diff as diffmod
+from .auth.bugbounty import BugBountyScope
 from .auth.scope import AuthorizationError, Scope
 from .config import settings
+from .report import bugbounty as bbrep
 from .report import csv as csvrep
 from .report import html as htmlrep
 from .report import markdown as md
@@ -41,11 +44,21 @@ def _execute_scan(
     target: str, scope: Path, authorized: bool, offline: Path | None,
     no_scope_check: bool, out: Path, profile: str, web: bool, http: bool,
     cve: bool, insecure: bool, no_ai: bool,
+    bug_bounty: Path | None = None,
 ):
     """Shared core: authorize -> pipeline -> persist all report formats.
     Returns (ScanRun, Analysis|None, run_dir). Raises typer.Exit on gate/collect failure."""
+    bb_scope = None
     if offline and no_scope_check:
         console.print("[yellow]offline + --no-scope-check: skipping authorization gate[/yellow]")
+    elif bug_bounty:
+        try:
+            bb_scope = BugBountyScope.load(bug_bounty)
+            bb_scope.require(target, acknowledged=authorized)
+            console.print(f"[dim]Bug bounty scope: {bb_scope.program_name or 'loaded'}[/dim]")
+        except (AuthorizationError, FileNotFoundError) as e:
+            console.print(f"[red]Authorization failed:[/red] {e}")
+            raise typer.Exit(2) from None
     else:
         try:
             Scope.load(scope).require(target, acknowledged=authorized)
@@ -81,6 +94,13 @@ def _execute_scan(
     store.save_html(run_dir, htmlrep.render(run, analysis))
     store.save_sarif(run_dir, sarifrep.dumps(run, analysis))
     store.save_csv(run_dir, csvrep.to_csv(run, analysis))
+    if bb_scope:
+        bb_report = bbrep.to_bugbounty_json(
+            run, analysis,
+            program_name=bb_scope.program_name,
+            program_url=bb_scope.program_url,
+        )
+        (run_dir / "bugbounty.json").write_text(bb_report, encoding="utf-8")
     return run, analysis, run_dir
 
 
@@ -89,6 +109,7 @@ def scan(
     target: str = typer.Argument(..., help="Host/IP to assess (must be in scope)."),
     scope: Path = typer.Option("scope.yml", help="Authorization scope file."),
     authorized: bool = typer.Option(False, "--authorized", help="Assert you are permitted to test this target."),
+    bug_bounty: Path = typer.Option(None, "--bug-bounty", help="Bug bounty program scope file (YAML/JSON)."),
     profile: str = typer.Option("default", help="nmap profile: default | quick | full."),
     offline: Path = typer.Option(None, help="Use an existing nmap XML file instead of scanning."),
     no_scope_check: bool = typer.Option(False, "--no-scope-check", help="Skip scope gate (only valid with --offline)."),
@@ -107,7 +128,7 @@ def scan(
     run, analysis, run_dir = _execute_scan(
         target=target, scope=scope, authorized=authorized, offline=offline,
         no_scope_check=no_scope_check, out=out, profile=profile, web=web, http=http,
-        cve=cve, insecure=insecure, no_ai=no_ai,
+        cve=cve, insecure=insecure, no_ai=no_ai, bug_bounty=bug_bounty,
     )
     if pdf:
         if pdfrep.to_pdf(htmlrep.render(run, analysis), run_dir / "report.pdf"):
@@ -124,7 +145,10 @@ def scan(
         console.print(f"AI produced [bold]{len(analysis.findings)}[/bold] finding(s)"
                       + (f" ([yellow]{ungrounded} ungrounded[/yellow])" if ungrounded else ""))
     console.print(termrep.findings_table(run))
-    console.print(f"[green]Reports:[/green] {run_dir / 'report.md'} · .html · .sarif.json · findings.csv")
+    reports = [f"{run_dir / 'report.md'}", ".html", ".sarif.json", "findings.csv"]
+    if bug_bounty:
+        reports.append("bugbounty.json")
+    console.print(f"[green]Reports:[/green] {' · '.join(reports)}")
 
 
 @app.command()
@@ -132,6 +156,7 @@ def monitor(
     target: str = typer.Argument(..., help="Host/IP to monitor (must be in scope)."),
     scope: Path = typer.Option("scope.yml", help="Authorization scope file."),
     authorized: bool = typer.Option(False, "--authorized", help="Assert you are permitted to test this target."),
+    bug_bounty: Path = typer.Option(None, "--bug-bounty", help="Bug bounty program scope file."),
     profile: str = typer.Option("default", help="nmap profile."),
     offline: Path = typer.Option(None, help="Use an existing nmap XML (testing)."),
     no_scope_check: bool = typer.Option(False, "--no-scope-check", help="Skip scope gate (only with --offline)."),
@@ -147,6 +172,7 @@ def monitor(
         target=target, scope=scope, authorized=authorized, offline=offline,
         no_scope_check=no_scope_check, out=out, profile=profile,
         web=False, http=False, cve=False, insecure=False, no_ai=True,
+        bug_bounty=bug_bounty,
     )
     if prior is None:
         console.print("[yellow]No prior run for this target — baseline established.[/yellow]")
