@@ -1,14 +1,13 @@
 """Tests for bug bounty scope parser and report format."""
 import json
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
 import pytest
 
 from recon_reporter.auth.bugbounty import BugBountyScope
-from recon_reporter.model import Host, ScanRun, Service, Severity, RuleFlag
-from recon_reporter.report.bugbounty import to_bugbounty_json, SEVERITY_MAP
+from recon_reporter.model import Host, RuleFlag, ScanRun, Service, Severity
+from recon_reporter.report.bugbounty import SEVERITY_MAP, to_bugbounty_json
 
 
 def _make_scope_file(tmp_path: Path, data: dict) -> Path:
