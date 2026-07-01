@@ -2,6 +2,18 @@
 
 All notable changes to Recon Reporter.
 
+## [0.5.1] — 2026-06-30 — bug fixes
+### Fixed
+- **WhatWeb target matching** — results now match by hostname instead of merging into ALL hosts; prevents incorrect tech attributions on multi-host scans.
+- **XML bomb vulnerability** — switched from `xml.etree.ElementTree` to `defusedxml` to prevent billion-laughs attacks via `--offline`.
+- **MCP server DRY violation** — `_run_scan` now calls `run_pipeline()` instead of duplicating logic; implemented missing `recon_scan` tool.
+- **CSV injection protection** — cells starting with `=`, `+`, `-`, `@` are now prefixed with `'` to prevent formula injection.
+- **Scope file encoding** — `read_text()` now uses explicit `encoding="utf-8"` to prevent Windows cp1252 issues.
+- **JSON extraction regex** — changed greedy `{.*\}` to non-greedy `{.*?}` in `_extract_json` to prevent invalid captures.
+- **Diff severity tracking** — flag comparison now includes severity level to detect when severity changes between runs.
+- **Cross-platform path display** — replaced hardcoded `\` with `Path /` operator for Linux/macOS compatibility.
+- **Import placement** — moved `import re` from function body to module level in rules.py; added type annotation to `_outdated_flag` parameter.
+
 ## [0.5.0] — 2026-06-28 — stretch features
 ### Added
 - **`monitor` command** — scan a target and diff it against its most recent prior run; writes
@@ -20,7 +32,7 @@ All notable changes to Recon Reporter.
   scan (rich). +1 test.
 - **`_execute_scan` helper** — scan & monitor share one gate→pipeline→persist core (DRY).
 - `make_run_dir` now collision-safe for back-to-back runs; `store.latest_findings()` lookup.
-- CLI integration tests (Typer runner) + store/dashboard/PDF tests. Suite 25 → **40**.
+- CLI integration tests (Typer runner) + store/dashboard/PDF tests. Suite 25 → **43**.
 
 ## [0.4.0] — 2026-06-28 — long-term hardening
 ### Added

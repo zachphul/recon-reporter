@@ -116,5 +116,5 @@ with the same scope gate applied.
 ## Tests
 
 ```bash
-pytest -q          # 8 tests, fully offline
+pytest -q          # 43 tests, fully offline
 ```
