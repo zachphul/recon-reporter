@@ -111,7 +111,7 @@ def scan(
     )
     if pdf:
         if pdfrep.to_pdf(htmlrep.render(run, analysis), run_dir / "report.pdf"):
-            console.print(f"[green]PDF:[/green] {run_dir}\\report.pdf")
+            console.print(f"[green]PDF:[/green] {run_dir / 'report.pdf'}")
         else:
             console.print("[yellow]PDF skipped — `pip install weasyprint`, or print "
                           "report.html from a browser.[/yellow]")
@@ -124,7 +124,7 @@ def scan(
         console.print(f"AI produced [bold]{len(analysis.findings)}[/bold] finding(s)"
                       + (f" ([yellow]{ungrounded} ungrounded[/yellow])" if ungrounded else ""))
     console.print(termrep.findings_table(run))
-    console.print(f"[green]Reports:[/green] {run_dir}\\report.md · .html · .sarif.json · findings.csv")
+    console.print(f"[green]Reports:[/green] {run_dir / 'report.md'} · .html · .sarif.json · findings.csv")
 
 
 @app.command()
@@ -156,7 +156,7 @@ def monitor(
     changed = bool(d["opened"] or d["closed"] or d["changed"] or d["new_flags"])
     console.print(f"Diff vs prior: [bold]{len(d['opened'])}[/bold] opened · "
                   f"[bold]{len(d['closed'])}[/bold] closed · "
-                  f"[bold]{len(d['new_flags'])}[/bold] new flag(s)  [dim]({run_dir}\\diff.md)[/dim]")
+                   f"[bold]{len(d['new_flags'])}[/bold] new flag(s)  [dim]({run_dir / 'diff.md'})[/dim]")
     if changed:
         console.print("[bold yellow]Changes detected since last run.[/bold yellow]")
     if changed and fail_on_new:

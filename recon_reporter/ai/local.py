@@ -16,7 +16,7 @@ log = get_logger(__name__)
 
 def _extract_json(text: str) -> str:
     text = text.strip()
-    fence = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
+    fence = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
     if fence:
         return fence.group(1)
     start, end = text.find("{"), text.rfind("}")

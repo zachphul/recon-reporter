@@ -35,14 +35,33 @@ def merge_into_hosts(raw: str, hosts: list[Host]) -> int:
             entries.append(json.loads(line))
         except json.JSONDecodeError:
             continue
+    host_addrs = {h.address.lower() for h in hosts}
     for ent in entries:
         plugins = ent.get("plugins", {})
         if not plugins:
             continue
+        target_url = ent.get("target", "")
+        target_host = ""
+        if target_url:
+            from urllib.parse import urlparse
+            try:
+                parsed = urlparse(target_url)
+                target_host = (parsed.hostname or "").lower()
+            except Exception:
+                target_host = ""
         summary = ", ".join(sorted(plugins.keys()))[:300]
         for h in hosts:
+            host_match = (h.address.lower() == target_host or
+                          (h.hostname and h.hostname.lower() == target_host) or
+                          (not target_host and h.address.lower() in host_addrs))
+            if not host_match:
+                continue
             for s in h.services:
                 if s.service in ("http", "https") or s.port in (80, 443, 8080, 8443):
-                    s.scripts["whatweb"] = summary
+                    existing = s.scripts.get("whatweb", "")
+                    if existing:
+                        s.scripts["whatweb"] = f"{existing}, {summary}"
+                    else:
+                        s.scripts["whatweb"] = summary
                     merged += 1
     return merged

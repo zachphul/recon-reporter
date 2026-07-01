@@ -25,9 +25,9 @@ def diff_runs(old: ScanRun, new: ScanRun) -> dict:
     opened = sorted(set(en) - set(eo))
     closed = sorted(set(eo) - set(en))
     changed = sorted(k for k in set(eo) & set(en) if eo[k] != en[k])
-    fo = {(f.title, f.host, f.port) for f in old.flags}
-    fn = {(f.title, f.host, f.port) for f in new.flags}
-    new_flags = sorted(t for (t, _, _) in (fn - fo))
+    fo = {(f.title, f.host, f.port, f.severity) for f in old.flags}
+    fn = {(f.title, f.host, f.port, f.severity) for f in new.flags}
+    new_flags = sorted(t for (t, _, _, _) in (fn - fo))
     return {
         "target": new.target,
         "opened": [{"endpoint": k, "service": en[k]} for k in opened],

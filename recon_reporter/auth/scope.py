@@ -30,7 +30,7 @@ class Scope:
 
     @classmethod
     def load(cls, path: str | Path) -> Scope:
-        data = yaml.safe_load(Path(path).read_text()) or {}
+        data = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
         entries = data.get("authorized_targets", [])
         if not entries:
             raise AuthorizationError(f"scope file {path} has no authorized_targets")

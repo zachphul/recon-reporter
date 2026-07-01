@@ -4,20 +4,18 @@ Model Context Protocol. Ties the project to your MCP certification.
 Run:  python -m recon_reporter.mcp_server     (requires `pip install mcp`)
 
 Tools exposed:
-  - recon_scan(target, scope_file, authorized): run a scan, return structured findings
+  - recon_scan(target, scope_file, authorized): run a scan with AI analysis
   - recon_rules(target, scope_file, authorized): findings without the LLM layer
 
 The scope gate still applies — the agent cannot scan anything not in the scope file.
 """
 from __future__ import annotations
 
-from datetime import datetime
-
+from .ai.base import Analysis
 from .auth.scope import AuthorizationError, Scope
-from .collectors.nmap import NmapCollector
-from .enrich import rules
+from .config import settings
 from .model import ScanRun
-from .parsers.nmap_xml import parse_nmap_xml
+from .pipeline import run_pipeline
 
 try:
     from mcp.server.fastmcp import FastMCP
@@ -25,20 +23,14 @@ except ImportError:  # pragma: no cover
     FastMCP = None  # type: ignore
 
 
-def _run_scan(target: str, scope_file: str, authorized: bool, profile: str = "default") -> ScanRun:
+def _run_scan(target: str, scope_file: str, authorized: bool, profile: str = "default",
+              no_ai: bool = False) -> tuple[ScanRun, Analysis | None]:
     Scope.load(scope_file).require(target, acknowledged=authorized)
-    nm = NmapCollector(profile=profile)
-    if not nm.available():
-        raise RuntimeError("nmap not installed on this host")
-    res = nm.run(target)
-    if not res.ok:
-        raise RuntimeError(f"nmap failed: {res.error}")
-    run = ScanRun(target=target, started_at=datetime.now(),
-                  tool_versions={"nmap": res.version or "unknown"})
-    run.hosts = parse_nmap_xml(res.raw)
-    run.flags = rules.evaluate(run.hosts)
-    run.finished_at = datetime.now()
-    return run
+    result = run_pipeline(
+        target, profile=profile, no_ai=no_ai, settings=settings,
+        progress=lambda m: None,
+    )
+    return result.scan, result.analysis
 
 
 def build_server():  # pragma: no cover - requires mcp + network
@@ -47,10 +39,24 @@ def build_server():  # pragma: no cover - requires mcp + network
     mcp = FastMCP("recon-reporter")
 
     @mcp.tool()
-    def recon_rules(target: str, scope_file: str = "scope.yml", authorized: bool = False) -> dict:
-        """Run recon on an in-scope target and return structured findings (no LLM)."""
+    def recon_scan(target: str, scope_file: str = "scope.yml", authorized: bool = False) -> dict:
+        """Run a full recon scan on an in-scope target with AI analysis and return findings."""
         try:
-            run = _run_scan(target, scope_file, authorized)
+            run, analysis = _run_scan(target, scope_file, authorized, no_ai=False)
+        except AuthorizationError as e:
+            return {"error": "authorization", "detail": str(e)}
+        except Exception as e:
+            return {"error": type(e).__name__, "detail": str(e)}
+        result = run.model_dump(mode="json")
+        if analysis:
+            result["analysis"] = analysis.model_dump(mode="json")
+        return result
+
+    @mcp.tool()
+    def recon_rules(target: str, scope_file: str = "scope.yml", authorized: bool = False) -> dict:
+        """Run recon on an in-scope target and return rule-based findings (no LLM)."""
+        try:
+            run, _analysis = _run_scan(target, scope_file, authorized, no_ai=True)
         except AuthorizationError as e:
             return {"error": "authorization", "detail": str(e)}
         except Exception as e:

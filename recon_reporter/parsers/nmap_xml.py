@@ -1,7 +1,7 @@
 """Parse Nmap XML output into the canonical model."""
 from __future__ import annotations
 
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
 
 from ..model import Host, Service
 

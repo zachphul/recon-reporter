@@ -3,6 +3,8 @@ they're reproducible and explainable — the AI layer reasons on top of them, it
 not replace them."""
 from __future__ import annotations
 
+import re
+
 from ..model import Host, RuleFlag, Service, Severity
 
 CLEARTEXT_PORTS = {21: "FTP", 23: "Telnet", 80: "HTTP", 110: "POP3", 143: "IMAP"}
@@ -38,8 +40,6 @@ def _flag(host: str, sev: Severity, title: str, detail: str, port: int | None = 
 def _ver_tuple(s: str) -> tuple[int, ...]:
     """Extract a leading numeric version. Handles suffixes ('6.6.1p1' -> (6,6,1)) and
     Debian-style epochs ('1:2.4.7' -> (2,4,7))."""
-    import re
-
     s = (s or "").strip()
     if ":" in s:  # strip an epoch prefix like "1:2.4.7"
         s = s.split(":", 1)[1]
@@ -49,7 +49,7 @@ def _ver_tuple(s: str) -> tuple[int, ...]:
     return tuple(int(x) for x in m.group(1).split("."))
 
 
-def _outdated_flag(host: str, s) -> RuleFlag | None:
+def _outdated_flag(host: str, s: Service) -> RuleFlag | None:
     if not (s.product and s.version):
         return None
     name = s.product.lower()
