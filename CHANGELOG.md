@@ -2,6 +2,13 @@
 
 All notable changes to Recon Reporter.
 
+## [0.6.0] — 2026-06-30 — SSH analysis
+### Added
+- **SSH key analysis** — detects weak key exchange algorithms (DH Group 1, DH Group 14 with SHA-1),
+  weak host key algorithms (DSA, RSA with SHA-1), weak ciphers (arcfour, 3des, des, blowfish),
+  weak MACs (hmac-md5, hmac-sha1-96), and short RSA host keys (< 2048-bit). Each finding includes
+  specific remediation steps (sshd_config directives, ssh-keygen commands). +3 tests.
+
 ## [0.5.1] — 2026-06-30 — bug fixes
 ### Fixed
 - **WhatWeb target matching** — results now match by hostname instead of merging into ALL hosts; prevents incorrect tech attributions on multi-host scans.
