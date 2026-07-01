@@ -20,6 +20,24 @@ WEAK_TLS_MARKERS = ("SSLv3", "TLSv1.0", "TLSv1.1", "SSLv2")
 # Above this many open services on one host, surface area is itself a finding.
 LARGE_SURFACE_THRESHOLD = 15
 
+# --- SSH weak algorithm detection ---
+WEAK_KEX = {
+    "diffie-hellman-group1-sha1": ("Diffie-Hellman Group 1 (1024-bit)", Severity.HIGH),
+    "diffie-hellman-group14-sha1": ("Diffie-Hellman Group 14 with SHA-1", Severity.MEDIUM),
+    "diffie-hellman-group-exchange-sha1": ("DH Group Exchange with SHA-1", Severity.MEDIUM),
+}
+WEAK_HOST_KEY = {
+    "ssh-dss": ("DSA host key", Severity.HIGH),
+    "ssh-rsa": ("RSA with SHA-1 signatures", Severity.MEDIUM),
+}
+WEAK_CIPHERS = (
+    "arcfour", "arcfour128", "arcfour256",
+    "3des-cbc", "blowfish-cbc", "cast128-cbc",
+    "des-cbc", "rijndael-cbc@lysator.liu.se",
+)
+WEAK_MACS = ("hmac-md5", "hmac-md5-96", "hmac-sha1-96", "umac-64@openssh.com")
+SSH_MIN_RSA_BITS = 2048
+
 # product (substring, case-insensitive) -> a recent-ish baseline version tuple.
 # Anything below is flagged as POTENTIALLY outdated (verify against the vendor advisory).
 OUTDATED_BASELINE = {
@@ -115,7 +133,69 @@ def _evaluate_service(host: str, s: Service) -> list[RuleFlag]:
         out.append(_flag(host, Severity.INFO, f"Version disclosed: {s.label}",
                          "Exact product/version is visible; useful for CVE matching.", p))
 
+    if s.service == "ssh" or (s.product and "openssh" in s.product.lower()):
+        out.extend(_check_ssh(host, s))
+
     outdated = _outdated_flag(host, s)
     if outdated:
         out.append(outdated)
     return out
+
+
+def _check_ssh(host: str, s: Service) -> list[RuleFlag]:
+    """Analyze SSH service scripts for weak algorithms, key exchange, and key sizes."""
+    flags: list[RuleFlag] = []
+
+    # Check ssh-hostkey for short keys
+    hostkey_out = s.scripts.get("ssh-hostkey", "")
+    for line in hostkey_out.splitlines():
+        line = line.strip()
+        m = re.match(r"(\d+)\s+\S+\s+\((\w+)\)", line)
+        if m:
+            bits, key_type = int(m.group(1)), m.group(2)
+            if key_type == "RSA" and bits < SSH_MIN_RSA_BITS:
+                flags.append(_flag(
+                    host, Severity.MEDIUM,
+                    f"Weak SSH RSA key ({bits}-bit)",
+                    f"RSA host key is only {bits} bits; recommended minimum is {SSH_MIN_RSA_BITS}. "
+                    f"Regenerate with: ssh-keygen -t rsa -b {SSH_MIN_RSA_BITS * 2}",
+                    s.port))
+
+    # Check ssh2-enum-algorithms for weak algorithms
+    enum_out = s.scripts.get("ssh2-enum-algorithms", "")
+    if enum_out:
+        lower = enum_out.lower()
+
+        for algo, (desc, sev) in WEAK_KEX.items():
+            if algo in lower:
+                flags.append(_flag(
+                    host, sev, f"Weak SSH key exchange: {desc}",
+                    f"Server supports {algo} which is considered weak. "
+                    f"Remove it from the server's KexAlgorithms config.",
+                    s.port))
+
+        for algo, (desc, sev) in WEAK_HOST_KEY.items():
+            if algo in lower:
+                flags.append(_flag(
+                    host, sev, f"Weak SSH host key algorithm: {desc}",
+                    f"Server offers {algo} which uses deprecated signatures. "
+                    f"Remove it from HostKeyAlgorithms in sshd_config.",
+                    s.port))
+
+        for cipher in WEAK_CIPHERS:
+            if cipher in lower:
+                flags.append(_flag(
+                    host, Severity.HIGH, f"Weak SSH cipher: {cipher}",
+                    f"Server supports {cipher} which is vulnerable to known attacks. "
+                    f"Remove it from Ciphers in sshd_config.",
+                    s.port))
+
+        for mac in WEAK_MACS:
+            if mac in lower:
+                flags.append(_flag(
+                    host, Severity.MEDIUM, f"Weak SSH MAC: {mac}",
+                    f"Server supports {mac} which is considered weak. "
+                    f"Remove it from MACs in sshd_config.",
+                    s.port))
+
+    return flags

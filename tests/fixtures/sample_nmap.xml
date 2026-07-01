@@ -10,7 +10,8 @@
       <port protocol="tcp" portid="22">
         <state state="open" reason="syn-ack"/>
         <service name="ssh" product="OpenSSH" version="6.6.1p1 Ubuntu 2ubuntu2.13" extrainfo="Ubuntu Linux; protocol 2.0"/>
-        <script id="ssh-hostkey" output="2048 ac:00:a0:1a:82:ff (RSA)"/>
+        <script id="ssh-hostkey" output="2048 ac:00:a0:1a:82:ff (RSA)&#10;256 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00 (ECDSA)"/>
+        <script id="ssh2-enum-algorithms" output="kex_algorithms: diffie-hellman-group14-sha1,diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha256&#10;host_key_algorithms: ssh-rsa,ssh-dss&#10;encryption_algorithms: aes128-ctr,aes192-ctr,aes256-ctr,arcfour256&#10;mac_algorithms: hmac-md5,hmac-sha1,hmac-sha2-256"/>
       </port>
       <port protocol="tcp" portid="23">
         <state state="open" reason="syn-ack"/>

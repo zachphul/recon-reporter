@@ -46,3 +46,43 @@ def test_large_attack_surface_flagged():
     services = [Service(port=p, service="svc", state="open") for p in range(1000, 1020)]  # 20
     flags = rules.evaluate([Host(address="10.0.0.6", services=services)])
     assert any("Large attack surface" in f.title for f in flags)
+
+
+def test_ssh_weak_algorithms_detected():
+    """The sample fixture includes SSH with weak KEX, host key, cipher, and MAC algos."""
+    hosts = parse_nmap_xml(FIXTURE.read_text(encoding="utf-8"))
+    flags = rules.evaluate(hosts)
+    ssh_flags = [f for f in flags if "SSH" in f.title]
+
+    assert any("Diffie-Hellman Group 1 (1024" in f.title for f in ssh_flags)
+    assert any("DSA host key" in f.title for f in ssh_flags)
+    assert any("arcfour256" in f.detail.lower() for f in ssh_flags)
+    assert any("hmac-md5" in f.detail.lower() for f in ssh_flags)
+
+
+def test_ssh_weak_host_key_bits():
+    host = Host(address="10.0.0.7", services=[
+        Service(port=22, service="ssh", product="OpenSSH", version="8.9",
+                scripts={"ssh-hostkey": "1024 aa:bb:cc (RSA)"}),
+    ])
+    flags = rules.evaluate([host])
+    ssh_flags = [f for f in flags if "SSH" in f.title and "RSA" in f.title]
+    assert len(ssh_flags) == 1
+    assert "1024" in ssh_flags[0].title
+    assert ssh_flags[0].severity == Severity.MEDIUM
+
+
+def test_ssh_clean_server_no_flags():
+    host = Host(address="10.0.0.8", services=[
+        Service(port=22, service="ssh", product="OpenSSH", version="9.6",
+                scripts={"ssh2-enum-algorithms": (
+                    "kex_algorithms: curve25519-sha256,diffie-hellman-group16-sha512\n"
+                    "host_key_algorithms: ssh-ed25519\n"
+                    "encryption_algorithms: chacha20-poly1305@openssh.com,aes256-gcm@openssh.com\n"
+                    "mac_algorithms: hmac-sha2-256-etm@openssh.com"
+                )}),
+    ])
+    flags = rules.evaluate([host])
+    # Filter to only weak SSH flags (exclude "Version disclosed" INFO)
+    weak_ssh = [f for f in flags if "SSH" in f.title and f.severity != Severity.INFO]
+    assert len(weak_ssh) == 0
