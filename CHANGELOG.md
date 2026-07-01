@@ -2,6 +2,36 @@
 
 All notable changes to Recon Reporter.
 
+## [0.9.0] — 2026-07-01 — risk scoring, subdomains, credential checks
+### Added
+- **Risk scoring engine** (`enrich/risk.py`) — calculates a 0-100 risk score for each scan based on
+  severity distribution, attack surface size, CVE exposure, service risk categories, and configuration
+  weaknesses. Score is stored in `ScanRun.risk_score` with a breakdown by category.
+- **Subdomain enumeration collector** (`collectors/subdomains.py`) — discovers subdomains via
+  subfinder (if installed) or crt.sh certificate transparency logs. New subdomains are resolved
+  and added as host entries. Integrates into the pipeline automatically.
+- **Default credential checker** (`collectors/default_creds.py`) — tests common admin credentials
+  on FTP, MySQL, PostgreSQL, Redis, MongoDB, and HTTP basic auth endpoints. Finds default
+  credentials are flagged as CRITICAL findings. Runs automatically on live scans.
+
+## [0.8.0] — 2026-07-01 — exploit-aware prioritization
+### Added
+- **Exploit intelligence** (`enrich/exploit.py`) — after CVE enrichment, each CVE is annotated
+  with real-world exploitation signals so findings rank by what attackers actually use, not raw
+  CVSS:
+  - **CISA KEV** (Known Exploited Vulnerabilities) — flags CVEs confirmed exploited in the wild,
+    plus those tied to known ransomware campaigns. A KEV hit outranks any CVSS score.
+  - **EPSS** (FIRST.org Exploit Prediction Scoring System) — attaches the 0-1 probability that a
+    CVE will be exploited in the next 30 days, batched and cached.
+- **New CRITICAL/HIGH rules** — every KEV CVE surfaces as its own `Actively exploited: <CVE>`
+  CRITICAL finding (with ransomware note); the top non-KEV CVE over an EPSS threshold surfaces as
+  HIGH. So the exploited vuln leads the report instead of being buried in a CVE list.
+- **Exploitation priority table** in the Markdown report and **KEV/EPSS badges** in the HTML
+  report; the AI prompt now tags CVEs `[KEV]`/`[EPSS %]` and is instructed to prioritize them.
+- Runs automatically with `--cve` (no new flag). On-disk caching (KEV 24h TTL); fully graceful
+  offline — a network failure degrades to whatever intel is cached, never crashes. +13 tests
+  (suite 56 → **69**), all offline. ruff + mypy clean.
+
 ## [0.7.0] — 2026-06-30 — bug bounty support
 ### Added
 - **Bug bounty scope parser** (`auth/bugbounty.py`) — loads program scope from YAML/JSON with
