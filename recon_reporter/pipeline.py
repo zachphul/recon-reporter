@@ -14,12 +14,16 @@ from .ai.analyst import get_analyst
 from .ai.base import Analysis
 from .collectors import tls as tlsmod
 from .collectors import whatweb as whatwebmod
+from .collectors.default_creds import check_default_creds
 from .collectors.http_headers import HttpHeaderCollector
 from .collectors.nmap import NmapCollector
+from .collectors.subdomains import SubdomainCollector, merge_subdomains, parse_subdomains
 from .config import Settings
 from .config import settings as default_settings
 from .enrich import rules
 from .enrich.cve import CveLookup
+from .enrich.exploit import ExploitEnricher
+from .enrich.risk import calculate_risk
 from .logconf import get_logger
 from .model import ScanRun
 from .parsers.nmap_xml import parse_nmap_xml
@@ -81,6 +85,21 @@ def run_pipeline(
     # 2) parse
     run.hosts = parse_nmap_xml(xml)
 
+    # 2b) subdomain enumeration (live only)
+    if live:
+        progress("Enumerating subdomains…")
+        sub_collector = SubdomainCollector()
+        sub_result = sub_collector.run(target)
+        if sub_result.ok:
+            raw_sink("subdomains", sub_result.raw)
+            subdomains = parse_subdomains(sub_result.raw, "crt.sh" if not sub_collector.available() else "subfinder")
+            added = merge_subdomains(subdomains, run.hosts)
+            if added:
+                progress(f"Found {len(subdomains)} subdomains, {added} new hosts added")
+                run.tool_versions["subdomains"] = sub_collector.name
+        else:
+            log.info("subdomain enumeration failed or returned no results: %s", sub_result.error)
+
     # 3) web/TLS collectors (live only) — merge into the model before rules
     if web and live:
         for coll, merge, label in (
@@ -110,11 +129,25 @@ def run_pipeline(
         progress("Querying NVD for CVEs… (rate-limited; cached)")
         added = CveLookup(api_key=settings.nvd_api_key).enrich(run.hosts)
         log.info("attached %d CVE reference(s)", added)
+        # 5b) prioritize those CVEs by real-world exploitability (CISA KEV + EPSS)
+        progress("Prioritizing CVEs by exploitation (CISA KEV + EPSS)…")
+        ExploitEnricher().enrich(run.hosts)
 
     # 6) deterministic rules (after all collectors have contributed)
     run.flags = rules.evaluate(run.hosts) + header_flags
 
-    # 7) AI analysis (best-effort: failure degrades to a rule-based report)
+    # 6b) default credential checking (live only)
+    if live:
+        progress("Checking for default credentials…")
+        cred_flags = check_default_creds(run.hosts)
+        run.flags.extend(cred_flags)
+        if cred_flags:
+            log.warning("found %d service(s) with default credentials!", len(cred_flags))
+
+    # 7) risk scoring (after rules and CVE enrichment)
+    run.risk_score, run.risk_breakdown = calculate_risk(run)
+
+    # 8) AI analysis (best-effort: failure degrades to a rule-based report)
     analysis: Analysis | None = None
     if not no_ai:
         progress(f"Analyzing with provider: {settings.resolved_provider()}")
