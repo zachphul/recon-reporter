@@ -2,6 +2,20 @@
 
 All notable changes to Recon Reporter.
 
+## [0.7.0] — 2026-06-30 — bug bounty support
+### Added
+- **Bug bounty scope parser** (`auth/bugbounty.py`) — loads program scope from YAML/JSON with
+  wildcard domains (*.example.com), CIDR ranges, and exclusion lists. Respects program rules
+  and rejects out-of-scope targets.
+- **Bug bounty report format** (`report/bugbounty.py`) — exports findings as structured JSON
+  with CVSS ranges, platform-specific severity ratings (Bugcrowd, HackerOne, Intigriti),
+  reproduction steps, and impact analysis. Ready for direct submission.
+- **`--bug-bounty` CLI flag** — loads scope from a bug bounty program definition file and
+  generates a `bugbounty.json` report alongside standard outputs.
+- **Remediation templates** (`ai/remediation.py`) — actionable, copy-pasteable commands for
+  20+ common findings (SSH, Telnet, FTP, databases, TLS, services). Used as fallback when AI
+  is disabled and as supplement when AI is enabled. +10 tests.
+
 ## [0.6.0] — 2026-06-30 — SSH analysis
 ### Added
 - **SSH key analysis** — detects weak key exchange algorithms (DH Group 1, DH Group 14 with SHA-1),
