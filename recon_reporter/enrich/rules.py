@@ -19,6 +19,8 @@ LEGACY_RISKY = {135: "MSRPC", 111: "rpcbind", 389: "LDAP (cleartext)",
 WEAK_TLS_MARKERS = ("SSLv3", "TLSv1.0", "TLSv1.1", "SSLv2")
 # Above this many open services on one host, surface area is itself a finding.
 LARGE_SURFACE_THRESHOLD = 15
+# EPSS probability at/above which a (non-KEV) CVE is worth surfacing as its own finding.
+EPSS_HIGH_THRESHOLD = 0.5
 
 # --- SSH weak algorithm detection ---
 WEAK_KEX = {
@@ -136,9 +138,40 @@ def _evaluate_service(host: str, s: Service) -> list[RuleFlag]:
     if s.service == "ssh" or (s.product and "openssh" in s.product.lower()):
         out.extend(_check_ssh(host, s))
 
+    out.extend(_check_exploit_intel(host, s))
+
     outdated = _outdated_flag(host, s)
     if outdated:
         out.append(outdated)
+    return out
+
+
+def _check_exploit_intel(host: str, s: Service) -> list[RuleFlag]:
+    """Promote actively-exploited (CISA KEV) and high-EPSS CVEs to their own findings so they
+    lead the report instead of being buried in a per-service CVE list. Emits nothing unless
+    CVE + exploit enrichment ran (i.e. the scan used --cve)."""
+    out: list[RuleFlag] = []
+    # Every KEV CVE is critical — it is confirmed exploited in the wild.
+    for c in s.cves:
+        if not c.kev:
+            continue
+        detail = (f"{c.id} is in CISA's Known Exploited Vulnerabilities catalog — confirmed "
+                  f"exploited in the wild. Patch or mitigate immediately per CISA guidance.")
+        if c.ransomware:
+            detail += " Linked to known ransomware campaigns."
+        if c.epss is not None:
+            detail += f" EPSS {c.epss:.0%}."
+        out.append(_flag(host, Severity.CRITICAL, f"Actively exploited: {c.id}", detail, s.port))
+    # The single highest-scoring non-KEV CVE, if it clears the EPSS bar (one per service so a
+    # noisy CVE list does not flood the findings).
+    high = [c for c in s.cves if not c.kev and (c.epss or 0) >= EPSS_HIGH_THRESHOLD]
+    if high:
+        top = max(high, key=lambda c: c.epss or 0)
+        extra = f", CVSS {top.cvss}" if top.cvss else ""
+        out.append(_flag(
+            host, Severity.HIGH, f"High exploitation likelihood: {top.id}",
+            f"{top.id} has an EPSS score of {top.epss:.0%} (probability of exploitation within "
+            f"30 days{extra}). Prioritize remediation.", s.port))
     return out
 
 

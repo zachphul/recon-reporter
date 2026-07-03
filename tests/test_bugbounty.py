@@ -112,7 +112,7 @@ def test_bugbounty_report_format():
         program_name="Test Program",
         program_url="https://example.com/bb",
     ))
-    assert report["report_type"] == "recon_reporter"
+    assert report["report_type"] == "reconlens"
     assert report["target"] == "app.example.com"
     assert report["program"]["name"] == "Test Program"
     assert len(report["findings"]) == 1

@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from recon_reporter.enrich import rules
-from recon_reporter.model import ScanRun
+from recon_reporter.model import CveRef, Host, ScanRun, Service
 from recon_reporter.parsers.nmap_xml import parse_nmap_xml
 from recon_reporter.report import csv as csvrep
 from recon_reporter.report import html as htmlrep
@@ -18,10 +18,39 @@ def _empty():
     return ScanRun(target="nothing-found", started_at=datetime.now())
 
 
+def _scan_with_kev():
+    return ScanRun(target="t", started_at=datetime.now(), hosts=[
+        Host(address="10.0.0.1", services=[Service(port=443, service="https", cves=[
+            CveRef(id="CVE-2021-44228", cvss=10.0, kev=True, ransomware=True, epss=0.98),
+            CveRef(id="CVE-2020-1234", cvss=9.8, epss=0.62),
+        ])]),
+    ])
+
+
 def test_empty_scan_markdown():
     out = md.render(_empty(), None)
     assert "# Security Assessment" in out
     assert "Authorized testing only" in out
+
+
+def test_markdown_priority_section_present_with_exploit_intel():
+    out = md.render(_scan_with_kev(), None)
+    assert "Exploitation priority" in out
+    assert "CVE-2021-44228" in out
+    assert "Actively exploited" in out
+    assert "98%" in out  # EPSS rendered as a percentage
+
+
+def test_markdown_priority_section_absent_without_intel():
+    # A plain scan (no KEV/EPSS on any CVE) must not render the priority section.
+    out = md.render(_empty(), None)
+    assert "Exploitation priority" not in out
+
+
+def test_html_cve_cell_shows_kev_badge():
+    out = htmlrep.render(_scan_with_kev(), None)
+    assert "class='kev'" in out
+    assert "CVE-2021-44228" in out
 
 
 def test_empty_scan_html():

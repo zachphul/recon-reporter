@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Recon Reporter.
+All notable changes to ReconLens.
 
 ## [0.9.0] — 2026-07-01 — risk scoring, subdomains, credential checks
 ### Added

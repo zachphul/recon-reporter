@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from ..model import ScanRun, Severity
+from ..model import CveRef, ScanRun, Severity
 
 
 class RemediationStep(BaseModel):
@@ -46,6 +46,9 @@ SYSTEM_PROMPT = (
     "RULES:\n"
     "- Ground every finding in the provided data. Do NOT invent services, ports, or CVEs.\n"
     "- Rank by real-world exploitability and business impact, not raw port count.\n"
+    "- A CVE tagged [KEV] is confirmed exploited in the wild (CISA) — treat it as the highest "
+    "priority regardless of CVSS, and lead the report with it. Use [EPSS xx%] probabilities to "
+    "rank the remaining CVEs by real-world exploitation likelihood, not CVSS alone.\n"
     "- For each finding give: title, severity, affected host:port, why it matters, and a "
     "concrete remediation.\n"
     "- Provide specific, actionable remediation_steps for each finding. Each step should have:\n"
@@ -60,6 +63,17 @@ SYSTEM_PROMPT = (
 )
 
 
+def _cve_tag(c: CveRef) -> str:
+    """Render a CVE with its exploit-intel tags for the AI prompt, so the model can see which
+    CVEs are actively exploited (KEV) or high-likelihood (EPSS) rather than just their CVSS."""
+    tag = f"{c.id}(cvss {c.cvss})" if c.cvss else c.id
+    if c.kev:
+        tag += " [KEV: ACTIVELY EXPLOITED" + (", ransomware" if c.ransomware else "") + "]"
+    if c.epss is not None:
+        tag += f" [EPSS {c.epss:.0%}]"
+    return tag
+
+
 def build_prompt(scan: ScanRun) -> str:
     lines = [f"TARGET: {scan.target}", f"STARTED: {scan.started_at.isoformat()}", ""]
     for h in scan.hosts:
@@ -72,9 +86,7 @@ def build_prompt(scan: ScanRun) -> str:
         for s in h.services:
             line = f"  {s.port}/{s.protocol} {s.state} {s.label}".rstrip()
             if s.cves:
-                line += "  CVEs: " + ", ".join(
-                    f"{c.id}({c.cvss})" if c.cvss else c.id for c in s.cves
-                )
+                line += "  CVEs: " + ", ".join(_cve_tag(c) for c in s.cves)
             lines.append(line)
             for sid, out in s.scripts.items():
                 if out:

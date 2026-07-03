@@ -1,3 +1,3 @@
-"""Recon Reporter — AI-assisted reconnaissance reporting."""
+"""ReconLens — AI-assisted reconnaissance reporting."""
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
