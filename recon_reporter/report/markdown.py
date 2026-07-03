@@ -70,6 +70,18 @@ def render(scan: ScanRun, analysis: Analysis | None) -> str:
     out.append("|" + "---|" * len(Severity))
     out.append("| " + " | ".join(str(counts[s]) for s in Severity) + " |\n")
 
+    # Risk score
+    if scan.risk_score is not None:
+        from ..enrich.risk import risk_label
+        label = risk_label(scan.risk_score)
+        out.append(f"## Risk Score: {scan.risk_score}/100 ({label})\n")
+        if scan.risk_breakdown:
+            out.append("| Category | Score |")
+            out.append("|----------|-------|")
+            for cat, score in scan.risk_breakdown.items():
+                out.append(f"| {cat.replace('_', ' ').title()} | {score} |")
+            out.append("")
+
     out.extend(_priority_section(scan))
 
     if analysis:

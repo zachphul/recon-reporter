@@ -27,3 +27,12 @@ def findings_table(run: ScanRun) -> Table:
     if not run.flags:
         t.add_row("[dim]—[/]", "[dim]no rule findings[/]", "")
     return t
+
+
+def risk_summary(run: ScanRun) -> str | None:
+    """Return a one-line risk score summary, or None if not calculated."""
+    if run.risk_score is None:
+        return None
+    from ..enrich.risk import risk_label
+    label = risk_label(run.risk_score)
+    return f"Risk score: {run.risk_score}/100 ({label})"

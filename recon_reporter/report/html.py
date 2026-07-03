@@ -93,6 +93,17 @@ def render(scan: ScanRun, analysis: Analysis | None) -> str:
         p.append(f"<td style='color:{_COLOR[s]}'>{counts[s]}</td>")
     p.append("</tr></table>")
 
+    # Risk score
+    if scan.risk_score is not None:
+        from ..enrich.risk import risk_label
+        label = risk_label(scan.risk_score)
+        p.append(f"<h2>Risk Score: {scan.risk_score}/100 ({label})</h2>")
+        if scan.risk_breakdown:
+            p.append("<table><tr><th>Category</th><th>Score</th></tr>")
+            for cat, score in scan.risk_breakdown.items():
+                p.append(f"<tr><td>{cat.replace('_', ' ').title()}</td><td>{score}</td></tr>")
+            p.append("</table>")
+
     if analysis:
         p.append("<h2>Executive summary</h2>")
         p.append(f"<p>{_e(analysis.executive_summary)}</p>")

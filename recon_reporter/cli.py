@@ -140,6 +140,9 @@ def scan(
     console.print(f"Parsed [bold]{len(run.hosts)}[/bold] host(s), "
                   f"[bold]{n_services}[/bold] open service(s), "
                   f"[bold]{len(run.flags)}[/bold] finding(s).")
+    risk_line = termrep.risk_summary(run)
+    if risk_line:
+        console.print(f"[bold]{risk_line}[/bold]")
     if analysis:
         ungrounded = sum(1 for f in analysis.findings if not f.grounded)
         console.print(f"AI produced [bold]{len(analysis.findings)}[/bold] finding(s)"
