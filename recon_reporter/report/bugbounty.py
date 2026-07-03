@@ -182,7 +182,7 @@ def to_bugbounty_json(
             findings.append(finding)
 
     report = {
-        "report_type": "reconlens",
+        "report_type": "recon_reporter",
         "report_version": "1.0",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "target": scan.target,

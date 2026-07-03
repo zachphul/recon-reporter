@@ -1,4 +1,4 @@
-"""MCP server wrapper — exposes ReconLens as tools an AI agent can call over the
+"""MCP server wrapper — exposes Recon Reporter as tools an AI agent can call over the
 Model Context Protocol. Ties the project to your MCP certification.
 
 Run:  python -m recon_reporter.mcp_server     (requires `pip install mcp`)
@@ -36,7 +36,7 @@ def _run_scan(target: str, scope_file: str, authorized: bool, profile: str = "de
 def build_server():  # pragma: no cover - requires mcp + network
     if FastMCP is None:
         raise SystemExit("MCP not installed. Run: pip install mcp")
-    mcp = FastMCP("reconlens")
+    mcp = FastMCP("recon-reporter")
 
     @mcp.tool()
     def recon_scan(target: str, scope_file: str = "scope.yml", authorized: bool = False) -> dict:

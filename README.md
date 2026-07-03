@@ -1,4 +1,4 @@
-# ReconLens
+# Recon Reporter
 
 **AI-assisted reconnaissance reporting.** Runs on Kali, orchestrates Nmap, normalizes the
 results into one data model, applies deterministic security rules, then uses an LLM to write
@@ -34,13 +34,13 @@ Nmap must be on PATH (Kali ships with it).
 
 ```bash
 # Full run (scan + AI report)
-reconlens scan scanme.nmap.org --scope scope.yml --authorized
+recon-reporter scan scanme.nmap.org --scope scope.yml --authorized
 
 # Rule-based report only (no LLM)
-reconlens scan 127.0.0.1 --scope scope.yml --authorized --no-ai
+recon-reporter scan 127.0.0.1 --scope scope.yml --authorized --no-ai
 
 # Offline: feed an existing nmap XML, no scanning, no scope needed (for testing)
-reconlens scan demo --offline tests/fixtures/sample_nmap.xml --no-scope-check
+recon-reporter scan demo --offline tests/fixtures/sample_nmap.xml --no-scope-check
 ```
 
 Output lands in `runs/<target>-<timestamp>/`: `report.md`, `findings.json`, and `raw/`.

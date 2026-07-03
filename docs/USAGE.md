@@ -30,7 +30,7 @@ flag to disable this for a live scan — by design.
 ### `scan`
 
 ```bash
-reconlens scan <target> [options]
+recon-reporter scan <target> [options]
 ```
 
 | Option | Purpose |
@@ -53,13 +53,13 @@ Examples:
 
 ```bash
 # Full assessment with CVEs, web/TLS recon, and an AI report
-reconlens scan scanme.nmap.org --scope scope.yml --authorized --cve --web
+recon-reporter scan scanme.nmap.org --scope scope.yml --authorized --cve --web
 
 # Fast, rule-only, no network beyond the scan
-reconlens scan 127.0.0.1 --scope scope.yml --authorized --no-ai
+recon-reporter scan 127.0.0.1 --scope scope.yml --authorized --no-ai
 
 # Offline replay of a saved scan (for dev / CI)
-reconlens scan demo --offline tests/fixtures/sample_nmap.xml --no-scope-check --no-ai
+recon-reporter scan demo --offline tests/fixtures/sample_nmap.xml --no-scope-check --no-ai
 ```
 
 Output: `runs/<target>-<timestamp>/` → `report.md`, `report.html`, `report.sarif.json`,
@@ -68,7 +68,7 @@ Output: `runs/<target>-<timestamp>/` → `report.md`, `report.html`, `report.sar
 ### `diff`
 
 ```bash
-reconlens diff <old findings.json> <new findings.json> [--out diff.md]
+recon-reporter diff <old findings.json> <new findings.json> [--out diff.md]
 ```
 
 Reports newly open / closed ports, changed services, and new rule flags between two runs —
@@ -77,7 +77,7 @@ asset drift monitoring.
 ### `monitor`
 
 ```bash
-reconlens monitor <target> --scope scope.yml --authorized [--fail-on-new]
+recon-reporter monitor <target> --scope scope.yml --authorized [--fail-on-new]
 ```
 
 Scans the target and automatically diffs it against its **most recent prior run** (writes
@@ -87,7 +87,7 @@ Scans the target and automatically diffs it against its **most recent prior run*
 ### `dashboard`
 
 ```bash
-reconlens dashboard --runs runs --out runs/dashboard.html
+recon-reporter dashboard --runs runs --out runs/dashboard.html
 ```
 
 Builds a single dark HTML index of every run under `runs/` — target, date, severity counts,

@@ -1,5 +1,5 @@
 [project]
-name = "reconlens"
+name = "recon-reporter"
 version = "0.8.0"
 description = "AI-assisted reconnaissance reporting tool — orchestrates Nmap, maps findings to CVEs, and generates prioritized security reports."
 readme = "README.md"
@@ -20,7 +20,7 @@ dependencies = [
 dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.10"]
 
 [project.scripts]
-reconlens = "recon_reporter.cli:app"
+recon-reporter = "recon_reporter.cli:app"
 
 [build-system]
 requires = ["hatchling"]

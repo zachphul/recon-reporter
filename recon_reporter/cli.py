@@ -1,10 +1,10 @@
-"""ReconLens CLI.
+"""Recon Reporter CLI.
 
 Examples:
-  reconlens scan scanme.nmap.org --scope scope.yml --authorized
-  reconlens scan 127.0.0.1 --scope scope.yml --authorized --no-ai
-  reconlens scan demo --offline tests/fixtures/sample_nmap.xml --no-scope-check
-  reconlens scan app.target.com --bug-bounty program.yml --authorized --cve --web
+  recon-reporter scan scanme.nmap.org --scope scope.yml --authorized
+  recon-reporter scan 127.0.0.1 --scope scope.yml --authorized --no-ai
+  recon-reporter scan demo --offline tests/fixtures/sample_nmap.xml --no-scope-check
+  recon-reporter scan app.target.com --bug-bounty program.yml --authorized --cve --web
 """
 from __future__ import annotations
 
@@ -124,7 +124,7 @@ def scan(
 ):
     """Run recon against TARGET and write a security report."""
     logconf.setup(verbose)
-    console.print(f"[bold]ReconLens[/bold] v{__version__}")
+    console.print(f"[bold]Recon Reporter[/bold] v{__version__}")
     run, analysis, run_dir = _execute_scan(
         target=target, scope=scope, authorized=authorized, offline=offline,
         no_scope_check=no_scope_check, out=out, profile=profile, web=web, http=http,
@@ -166,7 +166,7 @@ def monitor(
 ):
     """Scan TARGET and diff it against its most recent prior run (drift monitoring)."""
     logconf.setup(verbose)
-    console.print(f"[bold]ReconLens[/bold] v{__version__} — monitor")
+    console.print(f"[bold]Recon Reporter[/bold] v{__version__} — monitor")
     prior = store.latest_findings(target, out)  # capture BEFORE the new run is created
     run, _analysis, run_dir = _execute_scan(
         target=target, scope=scope, authorized=authorized, offline=offline,
